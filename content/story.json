@@ -1,0 +1,172 @@
+{
+  "schemaVersion": "0.1-draft",
+  "title": "不存在的第八節課",
+  "status": "story-draft-awaiting-team-review",
+  "authorRole": "小安",
+  "interfaceStatus": "proposal-not-yet-agreed-with-game-owner",
+  "opening": {
+    "text": "2026 年，你以校史志工的身分走進即將整理封存的舊教室。取下最後一本紀念冊時，門在身後合上。走廊所有門牌都變成三年二班，黑板浮出一行字：『請在第八次鐘聲，讓全班到齊。』廣播響起：『三年二班，開始點名……十六號……』下一個名字，沒有被唸出來。",
+    "objective": "找出班級紀錄缺少的人，完成未結束的點名，離開舊教室。"
+  },
+  "student": {
+    "name": "林予安",
+    "number": 17,
+    "classId": "1998-3-2",
+    "status": "transferred",
+    "wish": "把個人照留在班級紀念合照中，讓大家記得她也曾是班上的一員。"
+  },
+  "classRecord": {
+    "classId": "1998-3-2",
+    "originalCount": 34,
+    "recordedNumbers": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34],
+    "missingNumber": 17
+  },
+  "nameClues": [
+    {"evidenceId": "E03", "classId": "1998-3-2", "number": 17, "mask": "林□安"},
+    {"evidenceId": "E04", "classId": "1998-3-2", "number": 17, "mask": "□予□"}
+  ],
+  "departureOrder": ["return_book", "read_farewell", "transfer_school"],
+  "initialSceneIds": ["S01"],
+  "initialItemIds": [],
+  "rules": {
+    "realTimeCountdown": false,
+    "consumeRequiredItemsOnError": false,
+    "failureEnding": false,
+    "audioRequiredToSolve": false,
+    "hintsAdvanceBells": false,
+    "wrongAnswersAdvanceBells": false,
+    "sceneRevisitsAdvanceBells": false
+  },
+  "scenes": [
+    {"id": "S01", "name": "舊教室", "description": "褪色課桌、黑板與一張留有空白的合照。門被未結束的點名困住。"},
+    {"id": "S02", "name": "走廊資料區", "description": "科展名單、紀念名冊與廣播室資料櫃；資料上的班級和座號仍可辨識。"},
+    {"id": "S03", "name": "廣播室", "description": "老式播放設備和三段散落的錄音稿，等待被放回原本的順序。"}
+  ],
+  "evidence": [
+    {
+      "id": "E01", "sceneId": "S01", "requiresPuzzles": [],
+      "text": "1998 年三年二班班級資料：本班原有 34 位同學。"
+    },
+    {
+      "id": "E02", "sceneId": "S01", "requiresPuzzles": [],
+      "text": "現存畢業名單共 33 筆，依座號排列：1、2、3、4、5、6、7、8、9、10、11、12、13、14、15、16、18、19、20、21、22、23、24、25、26、27、28、29、30、31、32、33、34。"
+    },
+    {
+      "id": "E03", "sceneId": "S01", "requiresPuzzles": ["P01"],
+      "text": "借書卡：1998 年三年二班／17 號／林□安。姓名中間一字磨損，借閱班級與座號清楚可讀。"
+    },
+    {
+      "id": "E04", "sceneId": "S02", "requiresPuzzles": ["P01"],
+      "text": "科展名單：1998 年三年二班／17 號／□予□。第一與第三字被膠帶遮住，中間一字仍可辨識。"
+    },
+    {
+      "id": "E05", "sceneId": "S03", "requiresPuzzles": ["P02"],
+      "text": "17 號林予安轉學交接單：先把借的書還了，再把告別廣播稿交給廣播室，最後辦好轉學離校。註記：畢業前轉出，不列入本屆正式畢業名冊。"
+    },
+    {
+      "id": "E06", "sceneId": "S03", "requiresPuzzles": ["P03"],
+      "text": "完整告別稿：我會去新的學校，但請不要把我的位置擦掉。如果合照來不及，這張照片可以替我留下來嗎？謝謝三年二班，最後一次點名，請也算上我。"
+    },
+    {
+      "id": "E07", "sceneId": "S01", "requiresPuzzles": [],
+      "text": "班級紀念合照留有一格明顯的空白相框，尺寸和一張個人照相同；下方題字是『曾在這一班的我們』。"
+    }
+  ],
+  "items": [
+    {"id": "I01", "name": "17 號借書卡", "description": "姓名不完整，但班級與座號清楚可讀。"},
+    {"id": "I02", "name": "個人照", "description": "一張當年學生的個人照，背面寫著『請幫我留一個位置』。"},
+    {"id": "I03", "name": "走廊資料區鑰匙", "description": "開啟走廊資料區的通道。"},
+    {"id": "I04", "name": "轉學交接單", "description": "記錄畢業前轉學與最後一天的交接次序，可隨時重讀。"},
+    {"id": "I05", "name": "完整告別稿", "description": "說明個人照與紀念合照的關係，是最後互動的線索。"}
+  ],
+  "puzzles": [
+    {
+      "id": "P01", "sceneId": "S01", "title": "缺席的座號", "kind": "number",
+      "prompt": "待歸還物品：請輸入缺少的兩位數座號。",
+      "requiresPuzzles": [], "requiredItemIds": [], "evidenceIds": ["E01", "E02"],
+      "answer": "17", "spoilerText": "17",
+      "rewardItemIds": ["I01", "I02", "I03"], "unlockSceneIds": ["S02"],
+      "verifyIds": ["V-A02", "V-A07"],
+      "revealText": "十七號的物品還在抽屜裡。有人留下了照片，也留下了回到班級紀錄的線索。",
+      "failureText": "抽屜沒有打開。請再比較班級人數與座號。",
+      "hints": [
+        "全班原本的人數，和留下的名單不一樣。",
+        "先確認名單是否按照座號連續排列。",
+        "看看十六號與十八號之間，原本應該還有哪一筆。"
+      ]
+    },
+    {
+      "id": "P02", "sceneId": "S02", "title": "有座號，沒有名字", "kind": "name",
+      "prompt": "請為紀念名冊中的十七號補回姓名。",
+      "requiresPuzzles": ["P01"], "requiredItemIds": ["I01"], "evidenceIds": ["E03", "E04"],
+      "answer": "林予安", "spoilerText": "林予安",
+      "rewardItemIds": ["I04"], "unlockSceneIds": ["S03"],
+      "verifyIds": ["V-A03", "V-A05", "V-A07"],
+      "revealText": "林予安。轉學交接資料顯示，她在畢業前去了另一所學校。她沒有消失，只是沒有被寫進這份畢業名單。",
+      "failureText": "請確認兩份資料上的班級與座號，再比對姓名。",
+      "hints": [
+        "同一個人可能在不同活動中留下紀錄。",
+        "找出和借書卡相同班級、相同座號的那一列。",
+        "把兩份姓名欄依照第一、第二、第三個字對齊。"
+      ]
+    },
+    {
+      "id": "P03", "sceneId": "S03", "title": "被打亂的告別", "kind": "sequence",
+      "prompt": "依交接單，將三段錄音稿排回當天的順序。",
+      "requiresPuzzles": ["P02"], "requiredItemIds": ["I04"], "evidenceIds": ["E05"],
+      "options": ["transfer_school", "return_book", "read_farewell"],
+      "answer": ["return_book", "read_farewell", "transfer_school"],
+      "spoilerText": "還書→廣播→轉學",
+      "rewardItemIds": ["I05"], "unlockSceneIds": [],
+      "verifyIds": ["V-A04", "V-A05", "V-A07", "V-A09"],
+      "revealText": "告別稿終於完整。她請大家把個人照放進班級紀念合照，希望最後一次點名也能算上自己。",
+      "failureText": "事件都找到了，但順序還不符合交接單。",
+      "hints": [
+        "日期相同，不代表事情同時發生。",
+        "交接單寫了三件事，也留下它們的先後關係。",
+        "留意『先』『再』『最後』，不用靠聲音猜順序。"
+      ]
+    },
+    {
+      "id": "P04", "sceneId": "S01", "title": "最後一次點名", "kind": "item-and-action",
+      "prompt": "她想留下的位置，在哪裡？",
+      "requiresPuzzles": ["P03"], "requiredItemIds": ["I02", "I05"], "evidenceIds": ["E06", "E07"],
+      "answer": ["restore_group_photo", "answer_roll_call"],
+      "spoilerText": "將個人照放回合照，再代為回應點名",
+      "rewardItemIds": [], "unlockSceneIds": [], "endingId": "END01",
+      "verifyIds": ["V-A05", "V-A07", "V-A10"],
+      "revealText": "合照補上最後一格。廣播唸出完整姓名，這一次，她在班級紀錄裡有了回應。",
+      "failureText": "點名還停在空白處。先讓她在班級紀錄裡有一個位置。",
+      "wrongPlacementText": "這張照片需要一個能與全班留在一起的位置。",
+      "hints": [
+        "『到齊』不一定是把每個人都帶回房間。",
+        "再讀一次她留在告別稿裡的請求。",
+        "檢查背包中的個人照，以及教室中一直沒有補上的空白。"
+      ]
+    }
+  ],
+  "audio": [
+    {"id": "A01", "label": "開場點名", "transcript": "三年二班，開始點名……十六號……", "assetStatus": "not-produced"},
+    {"id": "A02", "label": "還書", "eventId": "return_book", "transcript": "借書已歸還。謝謝你們陪我讀完這些故事。", "assetStatus": "not-produced"},
+    {"id": "A03", "label": "廣播", "eventId": "read_farewell", "transcript": "我會去新的學校，但請不要把我的位置擦掉。如果合照來不及，這張照片可以替我留下來嗎？", "assetStatus": "not-produced"},
+    {"id": "A04", "label": "轉學", "eventId": "transfer_school", "transcript": "交接完成，學生已辦理轉學。她留下的告別，尚未被放進紀念冊。", "assetStatus": "not-produced"},
+    {"id": "A05", "label": "最後點名", "transcript": "十七號，林予安。", "assetStatus": "not-produced"},
+    {"id": "A06", "label": "玩家代為回應", "transcript": "到。轉學，也是我們班的一員。", "assetStatus": "not-produced"}
+  ],
+  "bellEvents": [
+    {"number": 1, "trigger": "opening_seen", "once": true},
+    {"number": 2, "trigger": "P01_solved", "once": true},
+    {"number": 3, "trigger": "P02_solved", "once": true},
+    {"number": 4, "trigger": "P03_solved", "once": true},
+    {"number": 5, "trigger": "return_S01_after_P03", "once": true},
+    {"number": 6, "trigger": "restore_group_photo", "once": true},
+    {"number": 7, "trigger": "final_roll_call_played", "once": true},
+    {"number": 8, "trigger": "answer_roll_call", "once": true}
+  ],
+  "endings": [
+    {
+      "id": "END01", "title": "一個都沒有少", "bellNumber": 8, "exitOpen": true,
+      "text": "第八次鐘聲響起，門開了，你回到 2026 年。校史紀念頁留下曾經在班上的 34 位同學，也如實註明林予安畢業前轉學；它不是被改造的正式畢業名冊。離開教室的人，不該因此被擦掉。"
+    }
+  ]
+}
