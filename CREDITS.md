@@ -84,3 +84,8 @@
 - 修改情況：直接複製生成 PNG，保留原始尺寸與 alpha；未裁切、縮放、重新去背或覆蓋原始生成檔。
 - 檢查：10 張均已目視檢查及讀取尺寸，alpha 掃描確認每張具有透明像素與物件內容。尚未整合遊戲或試玩。
 - 尺寸、SHA-256 與 alpha 計數：assets/objects/manifest.json；用途及完整生成提示詞連結：assets/objects/README.md。
+
+## 原創背景音樂 After Class（2026-10-30）
+以 Web Audio 原創合成的 72 BPM chill 背景音樂，使用柔和電鋼琴音色、低音與延伸和弦，無外部錄音、取樣或下載素材。實作：game/music.mjs。此音樂程式及其生成的原創樂曲採 CC0-1.0 公眾領域貢獻；不影響專案其他素材的授權。
+
+試聽檔：assets/audio/after-class-preview.wav（約 30 秒，原創樂曲離線合成預覽）；重建指令：node scripts/render-music-preview.mjs。WAV 與渲染器同採 CC0-1.0。
