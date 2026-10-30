@@ -4,6 +4,7 @@ import { createGame, execute, movePlayer, canInteract, getObjective, SAVE_KEY, s
 const $ = selector => document.querySelector(selector);
 const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const paths = {
+  close: '<path d="m4 4 16 16M20 4 4 20"/>',
   book: '<path d="M12 5c-3-2-6-2-9-1v15c3-1 6-1 9 1 3-2 6-2 9-1V4c-3-1-6-1-9 1Z"/><path d="M12 5v15"/>',
   bell: '<path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9Z"/><path d="M10 21h4M12 2V1"/>',
   sound: '<path d="m11 5-5 4H3v6h3l5 4V5Z"/><path d="M15 8a6 6 0 0 1 0 8m3-11a10 10 0 0 1 0 14"/>',
@@ -80,7 +81,7 @@ function openModal(title, body, subtitle = '', { closable = true, className = ''
   clearMovement();
   if (!modal.open) modalReturnFocus = document.activeElement;
   modal.className = `modal ${className}`;
-  $('#modal-content').innerHTML = `<header class="modal-header"><div><h2 id="modal-title">${esc(title)}</h2>${subtitle ? `<p class="modal-subtitle">${esc(subtitle)}</p>` : ''}</div>${closable ? '<button class="close-button" data-close aria-label="關閉視窗" type="button">×</button>' : ''}</header><div class="modal-body">${body}</div>`;
+  $('#modal-content').innerHTML = `<header class="modal-header"><div><h2 id="modal-title">${esc(title)}</h2>${subtitle ? `<p class="modal-subtitle">${esc(subtitle)}</p>` : ''}</div>${closable ? `<button class="close-button" data-close aria-label="關閉視窗" type="button">${icon('close')}</button>` : ''}</header><div class="modal-body">${body}</div>`;
   if (!modal.open) modal.showModal();
   modal.querySelector('[data-close]')?.addEventListener('click', closeModal);
 }
