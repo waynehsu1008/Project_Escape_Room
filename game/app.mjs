@@ -1,4 +1,6 @@
 import { createMusic } from './music.mjs';
+import { createEffects, actionSound } from './effects.mjs';
+const effects = createEffects();
 const backgroundMusic = createMusic();
 import { WORLD, getPoint, distance, findPath, walkable } from './world.mjs';
 import { createGame, execute, movePlayer, canInteract, getObjective, SAVE_KEY, serialize, restore } from './engine.mjs';
@@ -71,6 +73,8 @@ function chime() {
 }
 function act(action, announce = true) {
   const previousBells = state.bells.length, result = execute(state, action, story);
+  const sound = actionSound(action, result, state);
+  if (sound) effects.play(sound);
   if (result.ok) {
     state = result.state;
     if (state.bells.length > previousBells) chime();
@@ -98,6 +102,7 @@ function showFormFeedback(message) {
   }, 2000);
 }
 function openModal(title, body, subtitle = '', { closable = true, className = '' } = {}) {
+  if (state.started) effects.play('paper');
   clearFormFeedback();
   clearMovement();
   if (!modal.open) modalReturnFocus = document.activeElement;
@@ -173,6 +178,7 @@ function render() {
   $('#sound-button').setAttribute('aria-label', state.muted ? '開啟音效' : '關閉音效');
   $('#sound-button').setAttribute('aria-pressed', String(!state.muted));
   backgroundMusic.setEnabled(!state.muted && !document.hidden);
+  effects.setEnabled(!state.muted && !document.hidden);
   $('#selected-tool').hidden = !selectedItem;
   if (selectedItem) {
     $('#selected-tool').innerHTML = `<span>拿著${esc(itemLabels[selectedItem])} · 點擊使用目標</span><button type="button" id="cancel-item">收回背包</button>`;
@@ -406,6 +412,14 @@ function showEnding() {
 }
 
 function bindControls() {
+  document.addEventListener('click', event => {
+    const button = event.target.closest('button');
+    if (button && !button.disabled) effects.play('click');
+  });
+  document.addEventListener('keydown', event => {
+    if (event.repeat || event.target.matches('input,textarea,select')) return;
+    if (['e', 'b', 'escape', 'enter', ' '].includes(event.key.toLowerCase())) effects.play('click');
+  });
   $('#brand-icon').innerHTML = icon('book'); $('#objective-icon').innerHTML = icon('target'); $('#map-icon').innerHTML = icon('map'); $('#bag-icon').innerHTML = icon('bag'); $('#journal-icon').innerHTML = icon('note');
   $('#settings-button').innerHTML = icon('settings');
   const volumeControl = document.createElement('input');
@@ -437,7 +451,7 @@ function bindControls() {
   });
   window.addEventListener('keyup', event => keys.delete(event.key.toLowerCase()));
   window.addEventListener('blur', () => { clearMovement(); save(); });
-  document.addEventListener('visibilitychange', () => { backgroundMusic.setEnabled(!state.muted && !document.hidden); if (document.hidden) { clearMovement(); save(); } });
+  document.addEventListener('visibilitychange', () => { effects.setEnabled(!state.muted && !document.hidden); backgroundMusic.setEnabled(!state.muted && !document.hidden); if (document.hidden) { clearMovement(); save(); } });
   window.addEventListener('pagehide', save);
   for (const button of document.querySelectorAll('[data-direction]')) {
     const direction = 'arrow' + button.dataset.direction;
