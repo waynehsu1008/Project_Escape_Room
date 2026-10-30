@@ -24,7 +24,8 @@ export function execute(original, action, story) {
     if (state.started) return done('繼續探索。');
     state.started = true; bell(state, 1); return done('第一聲鐘響。請在第八次鐘聲，讓全班到齊。');
   }
-  if (!state.started || state.ended) return fail('請先開始遊戲。');
+  if (!state.started) return fail('請先開始遊戲。');
+  if (state.ended && !['READ', 'HINT', 'TRAVEL'].includes(action.type)) return fail('已通關，可以繼續探索與閱讀線索。');
   if (action.type === 'HINT') {
     const puzzle = story.puzzles.find(p => p.id === action.id);
     if (!puzzle) return fail('沒有這道謎題。');
@@ -102,7 +103,7 @@ export function execute(original, action, story) {
 }
 
 export function movePlayer(state, dx, dy, paused = false) {
-  if (paused || !state.started || state.ended || !Number.isFinite(dx) || !Number.isFinite(dy)) return state;
+  if (paused || !state.started || !Number.isFinite(dx) || !Number.isFinite(dy)) return state;
   const player = { ...state.player };
   const steps = Math.max(1, Math.ceil(Math.hypot(dx, dy) / 5));
   if (dx || dy) player.facing = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up');
@@ -126,7 +127,7 @@ export function restore(raw) {
     if ((solved('P02') && (!solved('P01') || !f.doorOpen || !has('I01'))) || (solved('P03') && (!solved('P02') || !has('I04')))) return null;
     if (data.inventory.some(id => !solved(['I04', 'I05'].includes(id) ? (id === 'I04' ? 'P02' : 'P03') : 'P01'))) return null;
     if ((f.doorOpen && !has('I03')) || (data.scene !== 'S01' && !f.doorOpen) || (data.scene === 'S03' && !solved('P02'))) return null;
-    if ((f.returned && !solved('P03')) || (f.photoPlaced && (!f.returned || !has('I02') || !has('I05'))) || (f.scriptPlaced && !f.photoPlaced) || (f.exitOpen && (!f.scriptPlaced || !solved('P04'))) || (solved('P04') !== f.exitOpen) || (data.ended && (!f.exitOpen || data.scene !== 'S02'))) return null;
+    if ((f.returned && !solved('P03')) || (f.photoPlaced && (!f.returned || !has('I02') || !has('I05'))) || (f.scriptPlaced && !f.photoPlaced) || (f.exitOpen && (!f.scriptPlaced || !solved('P04'))) || (solved('P04') !== f.exitOpen) || (data.ended && !f.exitOpen)) return null;
     const expectedUsed = [f.photoPlaced && 'I02', f.doorOpen && 'I03', f.scriptPlaced && 'I05'].filter(Boolean).sort();
     if (JSON.stringify([...data.used].sort()) !== JSON.stringify(expectedUsed)) return null;
     const expectedBells = [data.started && 1, solved('P01') && 2, solved('P02') && 3, solved('P03') && 4, f.returned && 5, f.photoPlaced && 6, f.scriptPlaced && 7, f.exitOpen && 8].filter(Boolean);
@@ -139,6 +140,7 @@ export function restore(raw) {
 }
 
 export function getObjective(state) {
+  if (state.ended) return ['第八節課，終於下課了。', '已通關，可以自由探索校舍、重讀線索與背包。'];
   if (state.flags.exitOpen) return ['最後一聲，終於有了回應。', '經過走廊，親自走出校舍出口。'];
   if (state.flags.scriptPlaced) return ['廣播正在等待你的回答。', '靠近講台，代她回應最後一次點名。'];
   if (state.flags.photoPlaced) return ['她的位置已經回到合照。', '將完整告別稿放上講台稿架。'];

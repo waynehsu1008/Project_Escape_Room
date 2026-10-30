@@ -184,3 +184,21 @@ test('V-B17：未知動作與未開始的機關不改動狀態', () => {
   assert.equal(perform(state, { type: 'UNKNOWN' }).ok, false);
   assert.equal(perform(near(state, 'drawer'), { type: 'SOLVE', id: 'P01', answer: '17' }).ok, false);
 });
+
+test('V-I06：通關後仍可移動、往返閱讀，存檔保留通關與八聲鐘', () => {
+  let state = finalReady();
+  state = perform(near(state, 'photo'), { type: 'USE', id: 'I02', target: 'photo' }).state;
+  state = perform(near(state, 'lectern'), { type: 'USE', id: 'I05', target: 'lectern' }).state;
+  state = perform(state, { type: 'ANSWER' }).state;
+  state = perform(portal(state, 'class-door'), { type: 'TRAVEL', target: 'class-door' }).state;
+  state = perform(portal(state, 'exit'), { type: 'TRAVEL', target: 'exit' }).state;
+  const moved = movePlayer(state, -20, 0);
+  assert.notEqual(moved.player.x, state.player.x);
+  const returned = perform(portal(moved, 'class-door'), { type: 'TRAVEL', target: 'class-door' });
+  assert.equal(returned.ok, true);
+  state = returned.state;
+  assert.equal(perform(near(state, 'blackboard'), { type: 'READ', target: 'blackboard' }).ok, true);
+  assert.equal(state.ended, true);
+  assert.deepEqual(state.bells, [1, 2, 3, 4, 5, 6, 7, 8]);
+  assert.deepEqual(restore(serialize(state)), state);
+});

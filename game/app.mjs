@@ -297,7 +297,7 @@ function showUseTarget(id) {
   record(id);
   const point = getPoint(state.scene, id), appropriate = { photo: 'I02', lectern: 'I05' }[id];
   const available = state.inventory.filter(item => ['I02', 'I03', 'I05'].includes(item) && !state.used.includes(item));
-  const finalCall = id === 'lectern' && state.flags.scriptPlaced;
+  const finalCall = id === 'lectern' && state.flags.scriptPlaced && !state.ended;
   openModal(point.name, `<img class="modal-art" src="${art[id]}" alt="${esc(point.name)}"><div class="clue-paper">${esc(clueText(id))}</div>${state.flags.photoPlaced && id === 'photo' ? `<img style="width:75px;height:100px;object-fit:cover;margin-top:15px" src="${itemArt.I02}" alt="已放回的個人照">` : ''}${finalCall ? '<p style="margin-top:20px">第七聲鐘響。這一次，你可以代她回答。</p><div class="modal-actions"><button class="primary-button" id="answer-roll-call">代為回應：「到。」</button></div>' : `<p style="margin-top:20px">${available.length ? '從背包選一件道具，對這裡使用。' : '也許需要一件能放在這裡的物品。可以繼續探索，之後再回來。'}</p><div class="modal-actions">${available.sort((a, b) => Number(b === appropriate) - Number(a === appropriate)).map(item => `<button class="secondary-button" data-use-item="${item}" type="button">使用${esc(itemLabels[item])}</button>`).join('')}</div>`}`, '讓留下的物品，找到自己的位置');
   bindUseButtons(id);
   $('#answer-roll-call')?.addEventListener('click', () => {
@@ -323,7 +323,7 @@ function showDoor(id) {
   bindUseButtons(id);
 }
 function interact(id) {
-  if (!state.started || state.ended || !canInteract(state, id)) return;
+  if (!state.started || !canInteract(state, id)) return;
   const point = getPoint(state.scene, id);
   if (selectedItem) return useItem(selectedItem, id);
   if (['blackboard', 'roster', 'science', 'recordings'].includes(id)) return showRead(id);
@@ -346,7 +346,7 @@ function showJournal() {
   openModal('探索筆記', entries || '<p>筆記還是空白。走近黑板、文件或物件互動，看過的線索會留在這裡。</p>', '記住看過的線索，不代替你解答');
 }
 function walkToPoint(id, forceDoor = false) {
-  if (!state.started || state.ended || modal.open) return;
+  if (!state.started || modal.open) return;
   const point = getPoint(state.scene, id);
   if (!point) return;
   const enterDoor = point.kind === 'door' && doorOpen(point) && !selectedItem;
@@ -360,15 +360,16 @@ function walkToPoint(id, forceDoor = false) {
 function showDestination([x, y]) { $('#destination').style.left = `${x / 10}%`; $('#destination').style.top = `${y / 6.67}%`; $('#destination').hidden = false; }
 function travelIfAtDoor(timestamp) {
   const point = WORLD[state.scene].points.find(p => p.kind === 'door' && distance(state.player, p) < 26);
-  if (!point) return false;
+  if (!point || (state.ended && point.id === 'exit')) return false;
   if (!doorOpen(point)) {
     if (timestamp - blockedDoorAt > 3500) { toast(point.id === 'exit' ? '最後的點名還沒結束，校舍出口尚未開放。' : point.id === 'broadcast-door' ? '先把紀念名冊的姓名補回來。' : '內門鎖著。先從背包使用鑰匙。'); blockedDoorAt = timestamp; }
     path = []; intent = null; $('#destination').hidden = true; return false;
   }
+  const wasEnded = state.ended;
   const result = act({ type: 'TRAVEL', target: point.id }, false);
   if (!result.ok) return false;
   clearMovement();
-  if (state.ended) showEnding();
+  if (state.ended && !wasEnded) showEnding();
   else {
     const arrival = $('#scene-arrival'); arrival.textContent = WORLD[state.scene].name;
     arrival.classList.remove('show'); void arrival.offsetWidth; arrival.classList.add('show');
@@ -389,7 +390,7 @@ function bindControls() {
   $('#sound-button').addEventListener('click', () => { state.muted = !state.muted; render(); save(); if (!state.muted) chime(); toast(state.muted ? '音效已關閉，所有線索仍有文字。' : '音效已開啟。'); });
   $('#interact-button').addEventListener('click', () => nearestId && interact(nearestId));
   game.addEventListener('click', event => {
-    if (event.target.closest('button') || modal.open || !state.started || state.ended) return;
+    if (event.target.closest('button') || modal.open || !state.started) return;
     const rect = game.getBoundingClientRect(), goal = [(event.clientX - rect.left) / rect.width * 1000, (event.clientY - rect.top) / rect.height * 667];
     if (!walkable(state.scene, ...goal)) return toast('那裡是牆壁或家具，試著走在空地上。');
     path = findPath(state.scene, [state.player.x, state.player.y], goal); intent = null; keys.clear();
@@ -420,8 +421,8 @@ let previousFrame = 0;
 function frame(timestamp) {
   const dt = Math.min(.04, Math.max(0, (timestamp - previousFrame) / 1000)); previousFrame = timestamp;
   let moving = false;
-  if (state.started && !state.ended && !modal.open && !document.hidden) {
-    state.elapsed += dt;
+  if (state.started && !modal.open && !document.hidden) {
+    if (!state.ended) state.elapsed += dt;
     let dx = Number(keys.has('arrowright') || keys.has('d')) - Number(keys.has('arrowleft') || keys.has('a'));
     let dy = Number(keys.has('arrowdown') || keys.has('s')) - Number(keys.has('arrowup') || keys.has('w'));
     const speed = 190;
