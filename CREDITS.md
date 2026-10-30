@@ -1,5 +1,23 @@
 # CREDITS.md
 
+## 第一版新增與採用素材（2026-10-30）
+
+本次依使用者要求，以 OpenAI 內建 image_gen 生成缺少的圖檔，未使用 CLI/API fallback。下列檔案均已保存於專案，完整提示詞在同目錄的同名 .prompt.txt；生成原圖未覆蓋原有素材。
+
+| 檔案 | 第一版用途 | 來源與方式 |
+| --- | --- | --- |
+| assets/generated/game-interface-concept-v1.png | 主畫面設計概念；不作執行時整張介面圖 | OpenAI 內建 image_gen，全新生成 |
+| assets/generated/broadcast-room-v1.png | S03 廣播室背景 | OpenAI 內建 image_gen，全新生成 |
+| assets/generated/player-four-directions-v1.png | 玩家前後左右四向角色圖 | OpenAI 內建 image_gen，全新生成，保留 alpha |
+| assets/generated/brass-key-v1.png | I03 鑰匙道具 | OpenAI 內建 image_gen，全新生成，保留 alpha |
+| assets/generated/student-portrait-v1.png | I02 虛構學生個人照 | OpenAI 內建 image_gen，全新生成，保留 alpha |
+
+既有素材採用：教室與走廊背景取自 assets/maps/；黑板、課桌、抽屜、合照、稿架、科展欄、名冊、資料櫃、播放機與門，取自 assets/objects/，用於互動物件的展示與詳情視窗。借書卡／交接單沿用名冊外觀，告別稿沿用稿架外觀，必要內容由 HTML 可讀文字呈現。圖書館、屋頂圖與四格背景提案未增加為首版關卡。
+
+合成鐘聲由 game/app.mjs 以 Web Audio 的正弦波現場產生，沒有匯入音樂或錄音；必要廣播採既有文字稿。字型使用裝置系統繁中字型，圖示為程式內的簡單 SVG 線條。生成素材與既有參考來源均不因此宣稱取得其他遊戲素材的授權，專案對外授權仍由團隊決定。
+
+詳細尺寸、alpha 與設計紀錄見 assets/generated/README.md。以下保留前期素材與研究來源紀錄；過去「尚未生成」的敘述是當時狀態，不代表目前沒有遊戲素材。
+
 版本：小安初稿 v0.1｜2026-10-29
 
 ## 故事與文字
@@ -20,10 +38,49 @@
 
 ## 實際素材清單
 
-本次沒有新增外部圖像、音效、配樂或字型檔。assets/ASSET_PLAN.md 只有待製作需求，不能記為素材已完成或授權已確認。
+初始故事草稿沒有匯入外部圖像、音效、配樂或字型檔。後續已生成的地圖與物品候選圖分別記於下方，素材需求狀態見 assets/ASSET_PLAN.md；尚未製作的項目不能記為已完成或授權已確認。
 
 新增素材後，每筆填寫：檔案、用途、作者、原始網址、授權名稱／條款網址、是否修改與確認日期。來源或授權尚不清楚時標記待確認，不記為已授權。
 
 | 檔案 | 用途 | 作者／來源網址 | 授權依據 | 修改情況 | 確認日期 |
 | --- | --- | --- | --- | --- | --- |
 | 尚無外部素材檔 | — | — | — | — | — |
+
+## AI 生成地圖素材（2026-10-29 新增）
+
+此節記錄已保存的生成圖片；上方「尚無外部素材檔」指外部匯入素材，不代表本專案沒有 AI 生成背景。
+
+| 檔案 | 用途 | 來源與方式 | 生成日期 |
+| --- | --- | --- | --- |
+| assets/maps/campus-01-classroom-v1.png | 俯視教室探索地圖 | OpenAI 內建 image_gen，全新生成 | 2026-10-29 |
+| assets/maps/campus-02-corridor-v1.png | 俯視走廊資料區地圖 | OpenAI 內建 image_gen，全新生成 | 2026-10-29 |
+| assets/maps/campus-03-library-v1.png | 俯視圖書館探索地圖 | OpenAI 內建 image_gen，全新生成 | 2026-10-29 |
+| assets/maps/campus-04-rooftop-v1.png | 俯視夕陽屋頂地圖 | OpenAI 內建 image_gen，全新生成 | 2026-10-29 |
+
+- 四張皆為 1536×1024；完整提示詞位於 assets/maps/ 下各圖同名的 .prompt.txt。
+- 參考來源：使用者於本聊天提供的兩張遊戲截圖，檔名為 codex-clipboard-456713e9-735b-4977-8bba-6c65c75ea287.png 與 codex-clipboard-49f69bd4-68b0-448c-b39a-553e6bb9bb74.png；僅作俯視視角及像素風格參考，未直接匯入截圖作遊戲背景。
+- 參考圖作者與原始授權未確認；此記錄不宣稱已取得參考遊戲素材授權，也不替生成圖片指定開源授權或宣告專屬著作權。
+- 已完成圖像目視檢查與檔案尺寸讀取；尚未整合角色移動、碰撞、地圖切換或執行試玩。使用說明在 assets/maps/README.md。
+
+## AI 生成互動物品素材：首批 10 張
+
+依據 BRIEF.md v0.2 製作，小安素材工作範圍；這些為候選美術，不代表互動功能已實作。
+
+| 檔案 | 物品／場景 | 來源與方式 | 生成日期 |
+| --- | --- | --- | --- |
+| assets/objects/campus-01-chalkboard-v1.png | 黑板；S01 | 內建 image_gen 全新生成 | 2026-10-29 |
+| assets/objects/campus-02-student-desk-v1.png | 課桌椅；S01 | 內建 image_gen 全新生成 | 2026-10-29 |
+| assets/objects/campus-03-lectern-script-stand-v1.png | 講台稿架；S01 | 內建 image_gen 全新生成 | 2026-10-29 |
+| assets/objects/campus-04-return-drawer-v1.png | 物品抽屜；S01 | 內建 image_gen 全新生成 | 2026-10-29 |
+| assets/objects/campus-05-class-photo-frame-v1.png | 班級合照框；S01 | 內建 image_gen 全新生成 | 2026-10-29 |
+| assets/objects/campus-06-science-bulletin-board-v1.png | 科展公布欄；S02 | 內建 image_gen 全新生成 | 2026-10-29 |
+| assets/objects/campus-07-memorial-register-v1.png | 紀念名冊；S02 | 內建 image_gen 全新生成 | 2026-10-29 |
+| assets/objects/campus-08-archive-cabinet-v1.png | 資料櫃；S02 | 內建 image_gen 全新生成 | 2026-10-29 |
+| assets/objects/campus-09-cassette-player-v1.png | 錄音播放機；S03 | 內建 image_gen 全新生成 | 2026-10-29 |
+| assets/objects/campus-10-classroom-door-v1.png | 教室門；S01／S02 | 內建 image_gen 全新生成 | 2026-10-29 |
+
+- 參考：使用者提供 codex-clipboard-03f45a05-9bbe-4b02-bbdc-43439c908fae.png，只參考粗像素畫風，未沿用附圖物件或文字，未直接匯入截圖作素材。
+- 作者／授權：由使用者指示以 OpenAI 內建 image_gen 生成；原參考圖作者與授權未確認，此處不宣稱取得原遊戲素材授權，也不替生成物指定開源授權。
+- 修改情況：直接複製生成 PNG，保留原始尺寸與 alpha；未裁切、縮放、重新去背或覆蓋原始生成檔。
+- 檢查：10 張均已目視檢查及讀取尺寸，alpha 掃描確認每張具有透明像素與物件內容。尚未整合遊戲或試玩。
+- 尺寸、SHA-256 與 alpha 計數：assets/objects/manifest.json；用途及完整生成提示詞連結：assets/objects/README.md。

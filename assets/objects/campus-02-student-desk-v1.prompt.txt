@@ -1,0 +1,17 @@
+物品：課桌椅
+依據：BRIEF.md v0.2；場景：S01 舊教室。
+用途：教室探索、環境觀察；本批不新增解謎條件。
+生成日期：2026-10-29（Asia/Taipei）。
+生成方式：內建 image_gen，全新生成，要求透明背景。
+參考：使用者截圖 codex-clipboard-03f45a05-9bbe-4b02-bbdc-43439c908fae.png，只參考畫風，不參考物件。
+輸出：campus-02-student-desk-v1.png；實際尺寸與 alpha 檢查結果另記於 manifest.json。
+
+Use case: stylized-concept
+Asset type: single isolated interactive environment object sprite for a 2D pixel-art Taiwanese school exploration/escape-room game.
+Input images: Image 1 is STYLE REFERENCE ONLY. Reference the chunky economical pixel rendering, heavy dark outlines, simple readable shapes and 2-3-tone shading. DO NOT reproduce ANY reference object, lettering, icon, UI panel, grid or background. This is an original common school object based on the game brief.
+Style/medium: genuine low-resolution 16-bit pixel sprite, visually designed on a 64x64 pixel logical canvas then enlarged with crisp nearest-neighbor square pixel blocks. Large flat pixel clusters, hard stair-step contours, dark 1-logical-pixel outline, limited palette, 2-3 flat tones per material, no small smooth detail. It must remain identifiable as a tiny in-game sprite. Match the reference's practical game-icon simplicity rather than an elaborate high-resolution painting.
+Composition/framing: ONE object or explicitly specified single assembled furniture unit only, centered on a square canvas, entirely visible with around 12 percent transparent padding, neither clipped nor touching edges. Slightly top-down FRONT view, orthographic RPG prop perspective, symmetric front face and modest visible top surface; no isometric diamond, no vanishing point. Camera faces north so front surfaces face the viewer. Uniform soft upper-left pixel highlights, no atmospheric lighting.
+Background: genuinely TRANSPARENT alpha background. Everything outside the object's outline is fully transparent, including internal cutout holes. No ground plane, no floor, no room, no background color, no visible checkerboard, no backdrop shadow, no circular icon badge, no decorative frame surrounding the sprite. Shadows ONLY inside the object.
+Constraints: NO labels or captions, NO readable writing, NO letters, NO numerals, NO brands, NO logos, NO watermarks, NO people standing beside the object, NO UI, NO extra floating props, NO alternate states, NO sprite sheet, NO collage. No glow, no gradients, no smooth antialiasing, no 3D rendering, no photorealism. Exactly one usable standalone sprite image. Original campus furnishings, nostalgic late-1990s Taiwan, mild mystery without horror.
+
+Subject: one assembled standard Taiwanese school STUDENT DESK AND CHAIR UNIT, honey-brown wooden desktop, four simple dark blue-gray metal legs, small under-desk storage cubby, matching wooden chair tucked partially underneath the front edge. Desk and chair read as one compact connected unit. Nothing on the desktop. Simple square silhouette, top surface visible, no additional furniture.
