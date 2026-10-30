@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f3efe5">
+  <meta name="description" content="不存在的第八節課：走進舊校舍，找回一段尚未完成的告別。2D 校園探索與密室解謎遊戲。">
+  <title>不存在的第八節課｜校園密室逃脫</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='8' fill='%23233530'/%3E%3Ctext x='20' y='29' text-anchor='middle' fill='%23eee7d7' font-size='28'%3E8%3C/text%3E%3C/svg%3E">
+  <link rel="stylesheet" href="game/styles.css">
+</head>
+<body>
+  <div class="app" id="app">
+    <header class="topbar">
+      <a class="wordmark" href="./" aria-label="不存在的第八節課首頁"><span id="brand-icon"></span><span>一段未完成的告別</span></a>
+      <p class="game-title">不存在的第八節課</p>
+      <nav class="header-tools" aria-label="遊戲選項">
+        <button class="icon-button" id="sound-button" type="button" aria-label="開啟音效" aria-pressed="false"></button>
+        <button class="icon-button" id="settings-button" type="button" aria-label="操作說明與設定"></button>
+      </nav>
+    </header>
+
+    <section class="scene-heading" aria-label="目前場景與鐘聲進度">
+      <div class="scene-title"><span class="scene-line"></span><div><h1 id="scene-name">舊教室</h1><p id="scene-subtitle">三年二班 · 放學之後</p></div></div>
+      <div class="bell-progress"><span class="bell-caption" id="bell-caption">鐘聲尚未響起</span><div class="bells" id="bells" aria-label="共八次鐘聲"></div></div>
+    </section>
+
+    <main class="game-layout">
+      <section class="map-panel" aria-label="遊戲探索地圖">
+        <div id="game" class="game-world" data-scene="S01" data-bells="0" data-ended="false" tabindex="0" aria-label="探索地圖，方向鍵移動，E 互動；也可點擊地面或物件走近">
+          <img class="map-background" id="map-image" src="assets/maps/campus-01-classroom-v1.png" alt="舊教室俯視探索地圖" draggable="false">
+          <div class="map-objects" id="map-objects"></div>
+          <div class="player-shadow" id="player-shadow"></div>
+          <div class="player" id="character" data-facing="up" aria-label="玩家角色"></div>
+          <div class="destination" id="destination" hidden></div>
+          <div class="scene-arrival" id="scene-arrival" aria-hidden="true"></div>
+        </div>
+        <div class="interaction-strip"><span id="nearby-text">走近物件，找回留在這裡的線索。</span><button id="interact-button" type="button"><kbd>E</kbd> 互動</button></div>
+        <div class="touch-controls" aria-label="觸控移動">
+          <button data-direction="up" aria-label="向上移動">↑</button>
+          <button data-direction="left" aria-label="向左移動">←</button>
+          <button data-direction="down" aria-label="向下移動">↓</button>
+          <button data-direction="right" aria-label="向右移動">→</button>
+        </div>
+      </section>
+
+      <aside class="sidebar" aria-label="目標、場景與背包">
+        <section class="objective-section">
+          <h2><span class="section-icon" id="objective-icon"></span>此刻的目標</h2>
+          <p class="objective-main" id="objective-main">留在教室的名單，少了誰？</p>
+          <p class="objective-detail" id="objective-detail">查看班級資料，找出缺少的座號。</p>
+          <button class="text-button" id="hint-button" type="button">需要一點方向 <span aria-hidden="true">↗</span></button>
+        </section>
+        <section class="scene-section">
+          <h2><span class="section-icon" id="map-icon"></span>探索路線</h2>
+          <ol class="scene-list" id="scene-list"></ol>
+          <p class="route-note">走到門口，前往下一個場景。</p>
+        </section>
+        <section class="inventory-section">
+          <div class="section-heading"><h2><span class="section-icon" id="bag-icon"></span>背包</h2><button class="text-button" id="bag-button" type="button">查看 <kbd>B</kbd></button></div>
+          <div class="inventory-slots" id="inventory-slots"></div>
+          <p class="bag-caption" id="bag-caption">重要的物品，都會好好留下。</p>
+        </section>
+        <button class="journal-button" id="journal-button" type="button"><span id="journal-icon"></span><span>探索筆記</span><span class="journal-count" id="journal-count">0</span></button>
+      </aside>
+    </main>
+
+    <footer class="footer"><p><span class="keyboard-hint"><kbd>↑</kbd><kbd>↓</kbd><kbd>←</kbd><kbd>→</kbd> 移動</span><span><kbd>E</kbd> 互動</span><span><kbd>B</kbd> 背包</span><span><kbd>Esc</kbd> 關閉</span><span class="click-hint">也可以點擊地面移動</span></p><span class="save-status" id="save-status">進度儲存在此瀏覽器</span></footer>
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    <div class="selected-tool" id="selected-tool" hidden></div>
+  </div>
+  <dialog id="modal" class="modal" aria-labelledby="modal-title"><div id="modal-content"></div></dialog>
+  <noscript><p class="noscript">這是一款需要 JavaScript 的遊戲。請啟用 JavaScript 後重新整理。</p></noscript>
+  <script type="module" src="game/app.mjs"></script>
+</body>
+</html>
