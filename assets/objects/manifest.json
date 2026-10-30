@@ -1,0 +1,335 @@
+{
+  "version": 1,
+  "date": "2026-10-29",
+  "timezone": "Asia/Taipei",
+  "basis": "BRIEF.md v0.2",
+  "generator": "OpenAI built-in image_gen",
+  "status": "generated-candidate",
+  "reference": {
+    "file": "codex-clipboard-03f45a05-9bbe-4b02-bbdc-43439c908fae.png",
+    "role": "style only; not reference objects"
+  },
+  "verification": {
+    "visualReview": true,
+    "alphaChannelInspected": true,
+    "gameIntegrationTested": false,
+    "filesUnmodifiedAfterGeneration": true
+  },
+  "notes": [
+    "保留生成原始尺寸與 alpha，未統一為 64×64 或 32×32；畫風提示不代表原生解析度。",
+    "contentBoundsAlphaAbove16 是以 alpha > 16 計算的可見範圍，不是碰撞範圍；微量半透明邊緣仍保留。",
+    "本批每種只有一張靜態候選圖，沒有開關變體、互動程式或可拾取道具 I01–I05 的完整圖示。"
+  ],
+  "assets": [
+    {
+      "id": "01-chalkboard",
+      "file": "campus-01-chalkboard-v1.png",
+      "width": 1774,
+      "height": 887,
+      "bytes": 964642,
+      "sha256": "1a745fbeeb818cc2d6f73b43078e0ecccafb4943454c29ffb85e7adf25bf5e49",
+      "alpha": {
+        "TransparentPixels": 583704,
+        "PartialAlphaPixels": 988162,
+        "OpaquePixels": 1672,
+        "MinAlpha": 0,
+        "MaxAlpha": 255,
+        "Left": 111,
+        "Top": 114,
+        "Right": 1662,
+        "Bottom": 767
+      },
+      "hasTransparency": true,
+      "contentBoundsAlphaAbove16": {
+        "x": 111,
+        "y": 114,
+        "width": 1552,
+        "height": 654
+      },
+      "name": "黑板",
+      "scene": "S01",
+      "usage": "查看劇情提示；黑板文字由遊戲介面顯示",
+      "state": "空白黑板",
+      "promptFile": "campus-01-chalkboard-v1.prompt.txt"
+    },
+    {
+      "id": "02-student-desk",
+      "file": "campus-02-student-desk-v1.png",
+      "width": 1254,
+      "height": 1254,
+      "bytes": 569025,
+      "sha256": "5762d7f0b3f6f3a40181d4ff0e1fc1effaca3e8686ad7305a6cec732870e6a7e",
+      "alpha": {
+        "TransparentPixels": 1059493,
+        "PartialAlphaPixels": 510721,
+        "OpaquePixels": 2302,
+        "MinAlpha": 0,
+        "MaxAlpha": 255,
+        "Left": 241,
+        "Top": 213,
+        "Right": 1013,
+        "Bottom": 1090
+      },
+      "hasTransparency": true,
+      "contentBoundsAlphaAbove16": {
+        "x": 241,
+        "y": 213,
+        "width": 773,
+        "height": 878
+      },
+      "name": "課桌椅",
+      "scene": "S01",
+      "usage": "教室環境探索；不新增謎題條件",
+      "state": "桌椅組合",
+      "promptFile": "campus-02-student-desk-v1.prompt.txt"
+    },
+    {
+      "id": "03-lectern-script-stand",
+      "file": "campus-03-lectern-script-stand-v1.png",
+      "width": 1254,
+      "height": 1254,
+      "bytes": 624987,
+      "sha256": "5ac95f9fbb6b351d83f9caf1b476346d9ea5a8eafe20154c2e7e3649e2c7319d",
+      "alpha": {
+        "TransparentPixels": 1001256,
+        "PartialAlphaPixels": 569280,
+        "OpaquePixels": 1980,
+        "MinAlpha": 0,
+        "MaxAlpha": 255,
+        "Left": 259,
+        "Top": 167,
+        "Right": 994,
+        "Bottom": 1116
+      },
+      "hasTransparency": true,
+      "contentBoundsAlphaAbove16": {
+        "x": 259,
+        "y": 167,
+        "width": 736,
+        "height": 950
+      },
+      "name": "講台稿架",
+      "scene": "S01",
+      "usage": "P04 放置 I05 完整告別稿",
+      "state": "稿架未放稿",
+      "promptFile": "campus-03-lectern-script-stand-v1.prompt.txt"
+    },
+    {
+      "id": "04-return-drawer",
+      "file": "campus-04-return-drawer-v1.png",
+      "width": 1254,
+      "height": 1254,
+      "bytes": 697241,
+      "sha256": "08f5f0f6f7ebf4e5126e1ded95c897995d7728abea6d97d978aa0a2e34024847",
+      "alpha": {
+        "TransparentPixels": 910267,
+        "PartialAlphaPixels": 660888,
+        "OpaquePixels": 1361,
+        "MinAlpha": 0,
+        "MaxAlpha": 255,
+        "Left": 124,
+        "Top": 261,
+        "Right": 1130,
+        "Bottom": 1015
+      },
+      "hasTransparency": true,
+      "contentBoundsAlphaAbove16": {
+        "x": 124,
+        "y": 261,
+        "width": 1007,
+        "height": 755
+      },
+      "name": "物品抽屜",
+      "scene": "S01",
+      "usage": "P01 抽屜機關及 I01／I02／I03 拾取位置",
+      "state": "關閉",
+      "promptFile": "campus-04-return-drawer-v1.prompt.txt"
+    },
+    {
+      "id": "05-class-photo-frame",
+      "file": "campus-05-class-photo-frame-v1.png",
+      "width": 1254,
+      "height": 1254,
+      "bytes": 785037,
+      "sha256": "27b01cb7b57eb45e6c10fb65e7e67222f47b13b04fa609a5529e4cb57ee6882a",
+      "alpha": {
+        "TransparentPixels": 865566,
+        "PartialAlphaPixels": 703735,
+        "OpaquePixels": 3215,
+        "MinAlpha": 0,
+        "MaxAlpha": 255,
+        "Left": 129,
+        "Top": 276,
+        "Right": 1124,
+        "Bottom": 980
+      },
+      "hasTransparency": true,
+      "contentBoundsAlphaAbove16": {
+        "x": 129,
+        "y": 276,
+        "width": 996,
+        "height": 705
+      },
+      "name": "班級合照框",
+      "scene": "S01",
+      "usage": "P04 使用 I02 個人照的目標",
+      "state": "合照缺席；右下有空白插入位置",
+      "promptFile": "campus-05-class-photo-frame-v1.prompt.txt"
+    },
+    {
+      "id": "06-science-bulletin-board",
+      "file": "campus-06-science-bulletin-board-v1.png",
+      "width": 1536,
+      "height": 1024,
+      "bytes": 975733,
+      "sha256": "580090f4bb10cbbc5e81e995f77a9b166dbdaabe1f71fee555e0559fa8f8cda3",
+      "alpha": {
+        "TransparentPixels": 969008,
+        "PartialAlphaPixels": 603856,
+        "OpaquePixels": 0,
+        "MinAlpha": 0,
+        "MaxAlpha": 254,
+        "Left": 230,
+        "Top": 222,
+        "Right": 1305,
+        "Bottom": 805
+      },
+      "hasTransparency": true,
+      "contentBoundsAlphaAbove16": {
+        "x": 230,
+        "y": 222,
+        "width": 1076,
+        "height": 584
+      },
+      "name": "科展公布欄",
+      "scene": "S02",
+      "usage": "查看 E04 科展名單；內容由文字介面顯示",
+      "state": "名單外觀",
+      "promptFile": "campus-06-science-bulletin-board-v1.prompt.txt"
+    },
+    {
+      "id": "07-memorial-register",
+      "file": "campus-07-memorial-register-v1.png",
+      "width": 1254,
+      "height": 1254,
+      "bytes": 728563,
+      "sha256": "df1c046599a11f6f146ec4a80ad04e7ac16f21e36b28df559a6481a711163cf6",
+      "alpha": {
+        "TransparentPixels": 876701,
+        "PartialAlphaPixels": 693629,
+        "OpaquePixels": 2186,
+        "MinAlpha": 0,
+        "MaxAlpha": 255,
+        "Left": 62,
+        "Top": 302,
+        "Right": 1191,
+        "Bottom": 1010
+      },
+      "hasTransparency": true,
+      "contentBoundsAlphaAbove16": {
+        "x": 62,
+        "y": 302,
+        "width": 1130,
+        "height": 709
+      },
+      "name": "紀念名冊",
+      "scene": "S02",
+      "usage": "P02 補回姓名；內容與輸入由遊戲介面顯示",
+      "state": "翻開",
+      "promptFile": "campus-07-memorial-register-v1.prompt.txt"
+    },
+    {
+      "id": "08-archive-cabinet",
+      "file": "campus-08-archive-cabinet-v1.png",
+      "width": 1254,
+      "height": 1254,
+      "bytes": 561700,
+      "sha256": "63a3ac2b4b98a2152f0309b06a1139908b753e20e924d59de423d12c7bc0afdc",
+      "alpha": {
+        "TransparentPixels": 1057835,
+        "PartialAlphaPixels": 513704,
+        "OpaquePixels": 977,
+        "MinAlpha": 0,
+        "MaxAlpha": 255,
+        "Left": 367,
+        "Top": 116,
+        "Right": 887,
+        "Bottom": 1148
+      },
+      "hasTransparency": true,
+      "contentBoundsAlphaAbove16": {
+        "x": 367,
+        "y": 116,
+        "width": 521,
+        "height": 1033
+      },
+      "name": "資料櫃",
+      "scene": "S02",
+      "usage": "P02 解鎖後提供 I04 轉學交接單",
+      "state": "關閉",
+      "promptFile": "campus-08-archive-cabinet-v1.prompt.txt"
+    },
+    {
+      "id": "09-cassette-player",
+      "file": "campus-09-cassette-player-v1.png",
+      "width": 1254,
+      "height": 1254,
+      "bytes": 580418,
+      "sha256": "14400df93275aa6a3dfcf8da572f8d59924f47415772ea30e89bc10f0230ed6f",
+      "alpha": {
+        "TransparentPixels": 1040911,
+        "PartialAlphaPixels": 529654,
+        "OpaquePixels": 1951,
+        "MinAlpha": 0,
+        "MaxAlpha": 255,
+        "Left": 178,
+        "Top": 307,
+        "Right": 1077,
+        "Bottom": 948
+      },
+      "hasTransparency": true,
+      "contentBoundsAlphaAbove16": {
+        "x": 178,
+        "y": 307,
+        "width": 900,
+        "height": 642
+      },
+      "name": "錄音播放機",
+      "scene": "S03",
+      "usage": "P03 進行錄音稿排序與播放",
+      "state": "靜態播放設備",
+      "promptFile": "campus-09-cassette-player-v1.prompt.txt"
+    },
+    {
+      "id": "10-classroom-door",
+      "file": "campus-10-classroom-door-v1.png",
+      "width": 1254,
+      "height": 1254,
+      "bytes": 712253,
+      "sha256": "baf36d1a6fda2e04109e70784c0d3ea75e1ef21cf8efa841de6b464028f8ffb6",
+      "alpha": {
+        "TransparentPixels": 906925,
+        "PartialAlphaPixels": 662529,
+        "OpaquePixels": 3062,
+        "MinAlpha": 0,
+        "MaxAlpha": 255,
+        "Left": 321,
+        "Top": 90,
+        "Right": 932,
+        "Bottom": 1177
+      },
+      "hasTransparency": true,
+      "contentBoundsAlphaAbove16": {
+        "x": 321,
+        "y": 90,
+        "width": 612,
+        "height": 1088
+      },
+      "name": "教室門",
+      "scene": "S01／S02",
+      "usage": "使用 I03 解鎖走廊內門的候選外觀",
+      "state": "關閉",
+      "promptFile": "campus-10-classroom-door-v1.prompt.txt"
+    }
+  ]
+}

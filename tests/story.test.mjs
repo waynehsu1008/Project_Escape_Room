@@ -186,12 +186,19 @@ test('T-A13 必要音訊都有文字稿', async () => {
   assert.ok(story.audio.every(a => nonempty(a.transcript)));
   assert.equal(story.rules.audioRequiredToSolve, false);
 });
-test('T-A14 照片與告別稿先取得，先放照片再回應才通往結局', async () => {
+test('T-A14 照片與告別稿先取得，先放照片再放稿、回應並走出出口才通往結局', async () => {
   const story = await loadStory();
   const final = story.puzzles.find(p => p.id === 'P04');
   assert.deepEqual(final.requiresPuzzles, ['P03']);
   assert.ok(final.requiredItemIds.includes('I02') && final.requiredItemIds.includes('I05'));
-  assert.deepEqual(final.answer, ['restore_group_photo', 'answer_roll_call']);
+  assert.deepEqual(final.answer, ['restore_group_photo', 'place_farewell_script', 'answer_roll_call']);
+  assert.equal(final.endingRequires, 'physically-leave-through-S02-exit-after-roll-call');
+  assert.equal(story.puzzles.find(p => p.id === 'P01').rewardMode, 'available-for-pickup');
+  for (const item of story.items) {
+    assert.ok(story.scenes.some(scene => scene.id === item.pickupSceneId));
+    assert.ok(story.puzzles.some(puzzle => puzzle.id === item.requiresPuzzle));
+    assert.ok(item.pickupTarget);
+  }
   assert.equal(final.endingId, 'END01');
   assert.equal(story.endings.length, 1);
   assert.equal(story.endings[0].exitOpen, true);

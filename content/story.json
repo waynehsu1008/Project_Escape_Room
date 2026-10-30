@@ -1,9 +1,9 @@
 {
-  "schemaVersion": "0.1-draft",
+  "schemaVersion": "0.2",
   "title": "不存在的第八節課",
-  "status": "story-draft-awaiting-team-review",
+  "status": "first-playable-version-awaiting-team-review",
   "authorRole": "小安",
-  "interfaceStatus": "proposal-not-yet-agreed-with-game-owner",
+  "interfaceStatus": "v0.2-connected-to-game-engine",
   "opening": {
     "text": "2026 年，你以校史志工的身分走進即將整理封存的舊教室。取下最後一本紀念冊時，門在身後合上。走廊所有門牌都變成三年二班，黑板浮出一行字：『請在第八次鐘聲，讓全班到齊。』廣播響起：『三年二班，開始點名……十六號……』下一個名字，沒有被唸出來。",
     "objective": "找出班級紀錄缺少的人，完成未結束的點名，離開舊教室。"
@@ -60,7 +60,7 @@
       "text": "科展名單：1998 年三年二班／17 號／□予□。第一與第三字被膠帶遮住，中間一字仍可辨識。"
     },
     {
-      "id": "E05", "sceneId": "S03", "requiresPuzzles": ["P02"],
+      "id": "E05", "sceneId": "S02", "requiresPuzzles": ["P02"],
       "text": "17 號林予安轉學交接單：先把借的書還了，再把告別廣播稿交給廣播室，最後辦好轉學離校。註記：畢業前轉出，不列入本屆正式畢業名冊。"
     },
     {
@@ -73,11 +73,11 @@
     }
   ],
   "items": [
-    {"id": "I01", "name": "17 號借書卡", "description": "姓名不完整，但班級與座號清楚可讀。"},
-    {"id": "I02", "name": "個人照", "description": "一張當年學生的個人照，背面寫著『請幫我留一個位置』。"},
-    {"id": "I03", "name": "走廊資料區鑰匙", "description": "開啟走廊資料區的通道。"},
-    {"id": "I04", "name": "轉學交接單", "description": "記錄畢業前轉學與最後一天的交接次序，可隨時重讀。"},
-    {"id": "I05", "name": "完整告別稿", "description": "說明個人照與紀念合照的關係，是最後互動的線索。"}
+    {"id": "I01", "name": "17 號借書卡", "description": "姓名不完整，但班級與座號清楚可讀。", "pickupSceneId": "S01", "pickupTarget": "drawer", "requiresPuzzle": "P01"},
+    {"id": "I02", "name": "個人照", "description": "一張當年學生的個人照，背面寫著『請幫我留一個位置』。", "pickupSceneId": "S01", "pickupTarget": "drawer", "requiresPuzzle": "P01"},
+    {"id": "I03", "name": "走廊資料區鑰匙", "description": "開啟走廊資料區的通道。", "pickupSceneId": "S01", "pickupTarget": "drawer", "requiresPuzzle": "P01"},
+    {"id": "I04", "name": "轉學交接單", "description": "記錄畢業前轉學與最後一天的交接次序，可隨時重讀。", "pickupSceneId": "S02", "pickupTarget": "cabinet", "requiresPuzzle": "P02"},
+    {"id": "I05", "name": "完整告別稿", "description": "說明個人照與紀念合照的關係，是最後互動的線索。", "pickupSceneId": "S03", "pickupTarget": "script", "requiresPuzzle": "P03"}
   ],
   "puzzles": [
     {
@@ -86,6 +86,7 @@
       "requiresPuzzles": [], "requiredItemIds": [], "evidenceIds": ["E01", "E02"],
       "answer": "17", "spoilerText": "17",
       "rewardItemIds": ["I01", "I02", "I03"], "unlockSceneIds": ["S02"],
+      "rewardMode": "available-for-pickup", "unlockMode": "use-I03-on-classroom-door",
       "verifyIds": ["V-A02", "V-A07"],
       "revealText": "十七號的物品還在抽屜裡。有人留下了照片，也留下了回到班級紀錄的線索。",
       "failureText": "抽屜沒有打開。請再比較班級人數與座號。",
@@ -131,12 +132,13 @@
       "id": "P04", "sceneId": "S01", "title": "最後一次點名", "kind": "item-and-action",
       "prompt": "她想留下的位置，在哪裡？",
       "requiresPuzzles": ["P03"], "requiredItemIds": ["I02", "I05"], "evidenceIds": ["E06", "E07"],
-      "answer": ["restore_group_photo", "answer_roll_call"],
-      "spoilerText": "將個人照放回合照，再代為回應點名",
+      "answer": ["restore_group_photo", "place_farewell_script", "answer_roll_call"],
+      "spoilerText": "先放個人照，再放完整告別稿，最後代為回應點名",
       "rewardItemIds": [], "unlockSceneIds": [], "endingId": "END01",
       "verifyIds": ["V-A05", "V-A07", "V-A10"],
       "revealText": "合照補上最後一格。廣播唸出完整姓名，這一次，她在班級紀錄裡有了回應。",
-      "failureText": "點名還停在空白處。先讓她在班級紀錄裡有一個位置。",
+      "failureText": "最後的點名還沒準備好。請檢查合照與講台上的告別稿。",
+      "endingRequires": "physically-leave-through-S02-exit-after-roll-call",
       "wrongPlacementText": "這張照片需要一個能與全班留在一起的位置。",
       "hints": [
         "『到齊』不一定是把每個人都帶回房間。",
