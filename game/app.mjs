@@ -33,7 +33,7 @@ const itemLabels = { I01: '借書卡', I02: '個人照', I03: '鑰匙', I04: '�
 
 let story, state = createGame(), saved = null, hasBadSave = false, storageAvailable = true;
 let selectedItem = null, path = [], intent = null, keys = new Set(), nearestId = null, sceneId = null;
-let toastTimer, blockedDoorAt = 0, audioContext, modalReturnFocus, lastSaveTime = 0;
+let toastTimer, feedbackTimer, feedbackAnimation, blockedDoorAt = 0, audioContext, modalReturnFocus, lastSaveTime = 0;
 const modal = $('#modal'), game = $('#game');
 
 function toast(message, duration = 4200) {
@@ -77,7 +77,26 @@ function act(action, announce = true) {
   if (announce) toast(result.message);
   return result;
 }
+function clearFormFeedback() {
+  clearTimeout(feedbackTimer);
+  feedbackAnimation?.cancel();
+  $('#form-feedback')?.replaceChildren();
+  $('#answer-input')?.removeAttribute('aria-invalid');
+}
+function showFormFeedback(message) {
+  clearFormFeedback();
+  const feedback = $('#form-feedback'), input = $('#answer-input');
+  if (!feedback) return;
+  feedback.textContent = message;
+  input?.setAttribute('aria-invalid', 'true');
+  feedbackAnimation = feedback.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 180 });
+  feedbackTimer = setTimeout(() => {
+    feedback.replaceChildren();
+    input?.removeAttribute('aria-invalid');
+  }, 2000);
+}
 function openModal(title, body, subtitle = '', { closable = true, className = '' } = {}) {
+  clearFormFeedback();
   clearMovement();
   if (!modal.open) modalReturnFocus = document.activeElement;
   modal.className = `modal ${className}`;
@@ -87,7 +106,7 @@ function openModal(title, body, subtitle = '', { closable = true, className = ''
 }
 function closeModal() { if (state.started) modal.close(); }
 modal.addEventListener('cancel', event => { if (!state.started) event.preventDefault(); });
-modal.addEventListener('close', () => { keys.clear(); const target = modalReturnFocus?.isConnected ? modalReturnFocus : game; target?.focus({ preventScroll: true }); });
+modal.addEventListener('close', () => { clearFormFeedback(); keys.clear(); const target = modalReturnFocus?.isConnected ? modalReturnFocus : game; target?.focus({ preventScroll: true }); });
 
 function doorOpen(point) {
   if (point.id === 'exit') return state.flags.exitOpen;
@@ -238,7 +257,7 @@ function showPuzzle(id) {
   $('#answer-form').addEventListener('submit', event => {
     event.preventDefault(); const answer = $('#answer-input').value;
     const result = act({ type: 'SOLVE', id, answer }, false);
-    if (!result.ok) { $('#form-feedback').textContent = result.message; $('#answer-input').setAttribute('aria-invalid', 'true'); return; }
+    if (!result.ok) { showFormFeedback(result.message); return; }
     toast(result.message, 6500);
     if (isNumber) showLoot('drawer', ['I01', 'I02', 'I03'], '打開的抽屜', '十七號的物品仍在這裡。請逐一拾取，放進背包。');
     else {
@@ -271,7 +290,7 @@ function showSequence() {
   renderSequence(); bindHints('P03');
   $('#check-sequence').addEventListener('click', () => {
     const result = act({ type: 'SOLVE', id: 'P03', answer: order }, false);
-    if (!result.ok) { $('#form-feedback').textContent = result.message; return; }
+    if (!result.ok) { showFormFeedback(result.message); return; }
     openModal('這次，聽見了她的告別', `<div class="clue-paper">${esc(story.evidence.find(e => e.id === 'E06').text)}</div><p style="margin-top:18px">完整告別稿已放在設備旁。請走近拾取，帶回教室，讓她的位置留在全班合照中。</p><div class="modal-actions"><button class="primary-button" id="return-explore">去拾取告別稿 →</button></div>`, '第四聲鐘響');
     $('#return-explore').addEventListener('click', closeModal);
   });
