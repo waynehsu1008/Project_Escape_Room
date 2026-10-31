@@ -1,3 +1,7 @@
+import { createMusic } from './music.mjs';
+import { createEffects, actionSound } from './effects.mjs';
+const effects = createEffects();
+const backgroundMusic = createMusic();
 import { WORLD, getPoint, distance, findPath, walkable } from './world.mjs';
 import { createGame, execute, movePlayer, canInteract, getObjective, SAVE_KEY, serialize, restore } from './engine.mjs';
 
@@ -69,6 +73,8 @@ function chime() {
 }
 function act(action, announce = true) {
   const previousBells = state.bells.length, result = execute(state, action, story);
+  const sound = actionSound(action, result, state);
+  if (sound) effects.play(sound);
   if (result.ok) {
     state = result.state;
     if (state.bells.length > previousBells) chime();
@@ -96,6 +102,7 @@ function showFormFeedback(message) {
   }, 2000);
 }
 function openModal(title, body, subtitle = '', { closable = true, className = '' } = {}) {
+  if (state.started) effects.play('paper');
   clearFormFeedback();
   clearMovement();
   if (!modal.open) modalReturnFocus = document.activeElement;
@@ -170,6 +177,8 @@ function render() {
   $('#sound-button').innerHTML = icon(state.muted ? 'muted' : 'sound');
   $('#sound-button').setAttribute('aria-label', state.muted ? '開啟音效' : '關閉音效');
   $('#sound-button').setAttribute('aria-pressed', String(!state.muted));
+  backgroundMusic.setEnabled(!state.muted && !document.hidden);
+  effects.setEnabled(!state.muted && !document.hidden);
   $('#selected-tool').hidden = !selectedItem;
   if (selectedItem) {
     $('#selected-tool').innerHTML = `<span>拿著${esc(itemLabels[selectedItem])} · 點擊使用目標</span><button type="button" id="cancel-item">收回背包</button>`;
@@ -187,7 +196,7 @@ function showWelcome() {
 }
 function startNew() {
   state = createGame(); saved = null; selectedItem = null; sceneId = null;
-  act({ type: 'START' }, false); modal.close(); toast(story.opening.objective, 6500); game.focus({ preventScroll: true });
+  state.muted = false; act({ type: 'START' }, false); modal.close(); toast(story.opening.objective, 6500); game.focus({ preventScroll: true });
 }
 function confirmRestart() {
   openModal('重新開始這段故事？', '<p>此瀏覽器的遊戲進度將重設，回到第一聲鐘響之前。已生成的素材與作品檔案不受影響。</p><div class="modal-actions"><button class="primary-button" id="confirm-restart">確認重新開始</button><button class="secondary-button" id="cancel-restart">保留進度</button></div>', '請確認是否放下這次的探索', { closable: state.started });
@@ -195,7 +204,7 @@ function confirmRestart() {
   $('#cancel-restart').addEventListener('click', () => state.started ? closeModal() : showWelcome());
 }
 function showSettings() {
-  openModal('在這裡，慢慢探索', `<p>你是來到舊校舍的校史志工。尋找線索、拾取道具，讓三年二班未完成的點名繼續下去。鐘聲依故事推進，沒有即時倒數。</p><dl class="help-controls"><dt><kbd>↑</kbd><kbd>↓</kbd><kbd>←</kbd><kbd>→</kbd></dt><dd>四方向移動角色，也可以點擊地面自動走路。</dd><dt><kbd>E</kbd></dt><dd>查看最近的物件；點擊物件標記也會先走近再互動。</dd><dt><kbd>B</kbd></dt><dd>開啟背包。文件可以重讀；選擇道具後，點擊目標使用。</dd><dt><kbd>Esc</kbd></dt><dd>關閉視窗，或將手上的道具收回背包。</dd></dl><p>閱讀與輸入時角色會停下來。開過的門可以往返；漏拿物品也能回去補取。拾取道具與解開機關是兩件事，別把東西留在抽屜裡。</p><p class="opening-note">目前為第一版：三場景、三道主要謎題與最後點名。聲音為合成鐘聲，必要廣播均以可讀文字呈現。</p><div class="modal-actions"><button class="secondary-button" id="settings-save">手動儲存</button><button class="secondary-button" id="settings-restart">重新開始</button></div>`, '移動、互動、找回一個人的位置');
+  openModal('在這裡，慢慢探索', `<p>你是來到舊校舍的校史志工。尋找線索、拾取道具，讓三年二班未完成的點名繼續下去。鐘聲依故事推進，沒有即時倒數。</p><dl class="help-controls"><dt><kbd>↑</kbd><kbd>↓</kbd><kbd>←</kbd><kbd>→</kbd></dt><dd>四方向移動角色，也可以點擊地面自動走路。</dd><dt><kbd>E</kbd></dt><dd>查看最近的物件；點擊物件標記也會先走近再互動。</dd><dt><kbd>B</kbd></dt><dd>開啟背包。文件可以重讀；選擇道具後，點擊目標使用。</dd><dt><kbd>Esc</kbd></dt><dd>關閉視窗，或將手上的道具收回背包。</dd></dl><p>閱讀與輸入時角色會停下來。開過的門可以往返；漏拿物品也能回去補取。拾取道具與解開機關是兩件事，別把東西留在抽屜裡。</p><p class="opening-note">目前為第一版：三場景、三道主要謎題與最後點名。背景音樂為原創 72 BPM chill 電鋼琴與柔和和弦，搭配合成鐘聲；必要廣播以可讀文字呈現。</p><div class="modal-actions"><button class="secondary-button" id="settings-save">手動儲存</button><button class="secondary-button" id="settings-restart">重新開始</button></div>`, '移動、互動、找回一個人的位置');
   $('#settings-save').addEventListener('click', () => { save(); toast(storageAvailable ? '已保存目前進度。' : '目前無法儲存進度。'); });
   $('#settings-restart').addEventListener('click', confirmRestart);
 }
@@ -403,8 +412,22 @@ function showEnding() {
 }
 
 function bindControls() {
+  document.addEventListener('click', event => {
+    const button = event.target.closest('button');
+    if (button && !button.disabled) effects.play('click');
+  });
+  document.addEventListener('keydown', event => {
+    if (event.repeat || event.target.matches('input,textarea,select')) return;
+    if (['e', 'b', 'escape', 'enter', ' '].includes(event.key.toLowerCase())) effects.play('click');
+  });
   $('#brand-icon').innerHTML = icon('book'); $('#objective-icon').innerHTML = icon('target'); $('#map-icon').innerHTML = icon('map'); $('#bag-icon').innerHTML = icon('bag'); $('#journal-icon').innerHTML = icon('note');
   $('#settings-button').innerHTML = icon('settings');
+  const volumeControl = document.createElement('input');
+  volumeControl.type = 'range'; volumeControl.min = '0'; volumeControl.max = '100'; volumeControl.value = '45';
+  volumeControl.setAttribute('aria-label', '背景音樂音量'); volumeControl.title = '背景音樂音量';
+  volumeControl.style.cssText = 'width:64px;accent-color:#697a58';
+  volumeControl.addEventListener('input', () => backgroundMusic.setVolume(Number(volumeControl.value) / 100));
+  $('#sound-button').after(volumeControl);
   $('#bag-button').addEventListener('click', showBag); $('#journal-button').addEventListener('click', showJournal); $('#hint-button').addEventListener('click', showHints); $('#settings-button').addEventListener('click', showSettings);
   $('#sound-button').addEventListener('click', () => { state.muted = !state.muted; render(); save(); if (!state.muted) chime(); toast(state.muted ? '音效已關閉，所有線索仍有文字。' : '音效已開啟。'); });
   $('#interact-button').addEventListener('click', () => nearestId && interact(nearestId));
@@ -428,7 +451,7 @@ function bindControls() {
   });
   window.addEventListener('keyup', event => keys.delete(event.key.toLowerCase()));
   window.addEventListener('blur', () => { clearMovement(); save(); });
-  document.addEventListener('visibilitychange', () => { if (document.hidden) { clearMovement(); save(); } });
+  document.addEventListener('visibilitychange', () => { effects.setEnabled(!state.muted && !document.hidden); backgroundMusic.setEnabled(!state.muted && !document.hidden); if (document.hidden) { clearMovement(); save(); } });
   window.addEventListener('pagehide', save);
   for (const button of document.querySelectorAll('[data-direction]')) {
     const direction = 'arrow' + button.dataset.direction;
