@@ -1,4 +1,5 @@
 // Coordinates use a 1000 × 667 world; images, hit targets and collision share it.
+import { CAMPUS_POINTS } from './campus.mjs';
 export const SIZE = { width: 1000, height: 667 };
 const point = (id, name, kind, x, y, stand, extra = {}) => ({ id, name, kind, x, y, stand, range: 88, ...extra });
 export const WORLD = {
@@ -13,7 +14,8 @@ export const WORLD = {
       point('drawer', '待歸還物品抽屜', 'puzzle', 868, 165, [868, 215]),
       point('photo', '留白的班級合照', 'use', 827, 100, [800, 177], { range: 105 }),
       point('lectern', '講台與稿架', 'use', 230, 150, [220, 215], { range: 96 }),
-      point('class-door', '通往走廊', 'door', 500, 625, [500, 580], { to: 'S02', arrival: [500, 550], range: 90 })
+      point('class-door', '通往走廊', 'door', 500, 625, [500, 580], { to: 'S02', arrival: [500, 550], range: 90 }),
+      ...CAMPUS_POINTS.S01
     ]
   },
   S02: {
@@ -27,7 +29,8 @@ export const WORLD = {
       point('cabinet', '廣播室資料櫃', 'pickup', 937, 106, [925, 175], { range: 100 }),
       point('class-door', '返回舊教室', 'door', 500, 625, [500, 575], { to: 'S01', arrival: [500, 540] }),
       point('broadcast-door', '通往廣播室', 'door', 480, 130, [480, 185], { to: 'S03', arrival: [500, 550] }),
-      point('exit', '校舍出口', 'door', 974, 350, [918, 350], { to: 'END01', range: 95 })
+      point('exit', '校舍出口', 'door', 974, 350, [918, 350], { to: 'END01', range: 95 }),
+      ...CAMPUS_POINTS.S02
     ]
   },
   S03: {
@@ -39,7 +42,8 @@ export const WORLD = {
       point('recordings', '散落的錄音稿', 'read', 224, 125, [225, 220], { range: 118 }),
       point('player', '錄音播放機', 'puzzle', 385, 165, [385, 232], { range: 105 }),
       point('script', '告別稿拾取處', 'pickup', 638, 165, [638, 235], { range: 105 }),
-      point('corridor-door', '返回走廊', 'door', 500, 625, [500, 575], { to: 'S02', arrival: [480, 215] })
+      point('corridor-door', '返回走廊', 'door', 500, 625, [500, 575], { to: 'S02', arrival: [480, 215] }),
+      ...CAMPUS_POINTS.S03
     ]
   }
 };

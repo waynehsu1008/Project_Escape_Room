@@ -34,7 +34,7 @@ export function execute(original, action, story) {
   }
   if (action.type === 'READ') {
     if (!canInteract(state, action.target)) return fail('請先走到物件附近。');
-    if (!['blackboard', 'roster', 'science', 'recordings', 'photo', 'lectern'].includes(action.target)) return fail('這裡沒有可讀取的文件。');
+    if (!['blackboard', 'roster', 'science', 'recordings', 'photo', 'lectern'].includes(action.target) && !['npc','flavor'].includes(getPoint(state.scene, action.target)?.kind)) return fail('這裡沒有可讀取的文件。');
     add(state.clues, action.target); return done('已記入探索筆記。');
   }
   if (action.type === 'SOLVE') {
@@ -118,7 +118,7 @@ export function restore(raw) {
   try {
     const data = JSON.parse(raw), base = createGame();
     if (!data || data.schema !== 1 || !WORLD[data.scene] || typeof data.started !== 'boolean' || typeof data.ended !== 'boolean' || typeof data.muted !== 'boolean' || !Number.isFinite(data.elapsed) || data.elapsed < 0) return null;
-    const lists = { solved: ['P01', 'P02', 'P03', 'P04'], inventory: ['I01', 'I02', 'I03', 'I04', 'I05'], used: ['I02', 'I03', 'I05'], clues: ['blackboard', 'roster', 'science', 'recordings', 'photo', 'lectern'], bells: [1, 2, 3, 4, 5, 6, 7, 8] };
+    const lists = { solved: ['P01', 'P02', 'P03', 'P04'], inventory: ['I01', 'I02', 'I03', 'I04', 'I05'], used: ['I02', 'I03', 'I05'], clues: ['blackboard', 'roster', 'science', 'recordings', 'photo', 'lectern', ...Object.values(WORLD).flatMap(w => w.points.filter(p => ['npc','flavor'].includes(p.kind)).map(p => p.id))], bells: [1, 2, 3, 4, 5, 6, 7, 8] };
     for (const [key, allowed] of Object.entries(lists)) if (!Array.isArray(data[key]) || data[key].some(id => !allowed.includes(id)) || new Set(data[key]).size !== data[key].length) return null;
     if (!data.flags || Object.keys(base.flags).some(k => typeof data.flags[k] !== 'boolean')) return null;
     if (!data.player || !Number.isFinite(data.player.x) || !Number.isFinite(data.player.y) || !['up', 'down', 'left', 'right'].includes(data.player.facing)) return null;

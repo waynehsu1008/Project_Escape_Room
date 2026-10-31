@@ -1,4 +1,5 @@
 import { createMusic } from './music.mjs';
+import { NPCS, PROPS, campusText, npcGreeting } from './campus.mjs';
 import { createEffects, actionSound } from './effects.mjs';
 const effects = createEffects();
 const backgroundMusic = createMusic();
@@ -130,7 +131,7 @@ function renderMap() {
     sceneId = state.scene; nearestId = null;
     $('#map-image').src = world.image; $('#map-image').alt = `${world.name}俯視探索地圖`;
     $('#scene-name').textContent = world.name; $('#scene-subtitle').textContent = world.subtitle;
-    $('#map-objects').innerHTML = world.points.map(p => `<button class="map-point ${p.kind === 'door' ? 'door' : ''}" type="button" data-target="${p.id}" aria-label="${esc(p.name)}" style="left:${p.x / 10}%;top:${p.y / 6.67}%"><span class="point-symbol">${icon(p.kind === 'door' ? 'door' : p.kind === 'read' ? 'eye' : p.kind === 'pickup' ? 'hand' : p.kind === 'use' ? 'hand' : 'lock')}</span><span class="point-label">${esc(p.name)}</span></button>`).join('');
+    $('#map-objects').innerHTML = world.points.map(p => `<button class="map-point ${p.sprite ? 'has-sprite' : ''} ${p.kind === 'door' ? 'door' : ''}" type="button" data-target="${p.id}" aria-label="${esc(p.name)}" style="left:${p.x / 10}%;top:${p.y / 6.67}%">${p.sprite ? `<img class="campus-sprite ${p.kind === 'npc' ? 'npc-sprite' : 'prop-sprite'}" src="${p.sprite}" alt="" draggable="false">` : ''}<span class="point-symbol">${icon(p.kind === 'npc' ? 'note' : p.kind === 'flavor' ? 'eye' : p.kind === 'door' ? 'door' : p.kind === 'read' ? 'eye' : p.kind === 'pickup' ? 'hand' : p.kind === 'use' ? 'hand' : 'lock')}</span><span class="point-label">${esc(p.name)}</span></button>`).join('');
     modal.close();
     $('#map-objects').querySelectorAll('[data-target]').forEach(button => button.addEventListener('click', event => { event.stopPropagation(); walkToPoint(button.dataset.target); }));
   }
@@ -210,6 +211,7 @@ function showSettings() {
 }
 
 function clueText(id) {
+  if (NPCS[id] || PROPS[id]) return campusText(id, state);
   if (id === 'blackboard') return state.flags.returned ? '把她的位置留下。\n最後一次點名，請也算上她。' : '請在第八次鐘聲，讓全班到齊。\n廣播：「三年二班，開始點名……十六號……」';
   if (id === 'roster') return `${story.evidence.find(e => e.id === 'E01').text}\n${story.evidence.find(e => e.id === 'E02').text}`;
   if (id === 'science') return story.evidence.find(e => e.id === 'E04').text;
@@ -354,6 +356,7 @@ function interact(id) {
   if (!state.started || !canInteract(state, id)) return;
   const point = getPoint(state.scene, id);
   if (selectedItem) return useItem(selectedItem, id);
+  if (NPCS[id] || PROPS[id]) return showCampus(id);
   if (['blackboard', 'roster', 'science', 'recordings'].includes(id)) return showRead(id);
   if (point.kind === 'door') return showDoor(id);
   if (id === 'drawer') return showPuzzle('P01');
@@ -367,6 +370,23 @@ function interact(id) {
   if (id === 'script') {
     if (!state.solved.includes('P03')) return openModal('設備旁的稿架', '<p>稿架還空著。播放設備中的三段錄音，似乎還沒有接回原本的順序。</p>', '告別，還沒說完');
     return showLoot('script', ['I05'], '完整告別稿', '拾取後帶回教室。合照和講台，都還在等著你。');
+  }
+}
+function showCampus(id) {
+  const result = act({ type: 'READ', target: id }, false);
+  if (!result.ok) return;
+  const npc = NPCS[id], prop = PROPS[id];
+  if (npc) {
+    openModal(npc.name, `<div class="npc-conversation"><img class="npc-portrait" src="${npc.image}" alt="${esc(npc.name)}"><div><p class="npc-role">${esc(npc.role)}</p><p id="npc-dialogue" role="status">${esc(npcGreeting(id,state))}</p></div></div><div class="dialogue-options">${npc.topics.map(([question],i) => `<button type="button" class="secondary-button" data-topic="${i}">${esc(question)}</button>`).join('')}</div><div class="modal-actions"><button type="button" class="text-button" id="leave-conversation">先去別處看看 →</button></div>`, '校園相遇 · 可自由交談');
+    modal.querySelectorAll('[data-topic]').forEach(button => button.addEventListener('click', () => {
+      const index = Number(button.dataset.topic);
+      $('#npc-dialogue').textContent = npc.topics[index][1];
+      effects.play('paper');
+      modal.querySelectorAll('[data-topic]').forEach(b => b.setAttribute('aria-pressed',String(b === button)));
+    }));
+    $('#leave-conversation').addEventListener('click', closeModal);
+  } else {
+    openModal(prop.name, `<img class="modal-art" src="${prop.image}" alt="${esc(prop.name)}"><div class="clue-paper">${esc(prop.text)}</div><p class="opening-note" style="margin-top:18px">你把這段校園日常記在探索筆記裡。物品留在原處，不占用背包。</p>`, '校園物件 · 查看與觀察');
   }
 }
 function showJournal() {
