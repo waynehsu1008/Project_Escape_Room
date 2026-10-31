@@ -95,3 +95,8 @@
 以 Web Audio 原創合成的 72 BPM chill 背景音樂，使用柔和電鋼琴音色、低音與延伸和弦，無外部錄音、取樣或下載素材。實作：game/music.mjs。此音樂程式及其生成的原創樂曲採 CC0-1.0 公眾領域貢獻；不影響專案其他素材的授權。
 
 試聽檔：assets/audio/after-class-preview.wav（約 30 秒，原創樂曲離線合成預覽）；重建指令：node scripts/render-music-preview.mjs。WAV 與渲染器同採 CC0-1.0。
+
+
+## NPC v2 與圖書館
+
+三位 NPC v2 以內建 imagegen 生成，以既有 player-four-directions-v1.png 作畫風與比例參考，原 NPC v1 作角色身分參考。檔案與逐張完整提示存於 assets/generated/campus/npc-*-v2.png 與同名 .prompt.txt；保留 v1。圖書館沿用 assets/maps/campus-03-library-v1.png，來源與授權沿用原素材紀錄。便箋支線文字為本專案新增。

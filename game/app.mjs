@@ -118,7 +118,7 @@ modal.addEventListener('close', () => { clearFormFeedback(); keys.clear(); const
 
 function doorOpen(point) {
   if (point.id === 'exit') return state.flags.exitOpen;
-  if (point.id === 'broadcast-door') return state.solved.includes('P02');
+  if (['broadcast-door','library-door'].includes(point.id)) return state.solved.includes('P02');
   if (state.scene === 'S01' && point.id === 'class-door') return state.flags.doorOpen;
   return true;
 }
@@ -205,7 +205,7 @@ function confirmRestart() {
   $('#cancel-restart').addEventListener('click', () => state.started ? closeModal() : showWelcome());
 }
 function showSettings() {
-  openModal('在這裡，慢慢探索', `<p>你是來到舊校舍的校史志工。尋找線索、拾取道具，讓三年二班未完成的點名繼續下去。鐘聲依故事推進，沒有即時倒數。</p><dl class="help-controls"><dt><kbd>↑</kbd><kbd>↓</kbd><kbd>←</kbd><kbd>→</kbd></dt><dd>四方向移動角色，也可以點擊地面自動走路。</dd><dt><kbd>E</kbd></dt><dd>查看最近的物件；點擊物件標記也會先走近再互動。</dd><dt><kbd>B</kbd></dt><dd>開啟背包。文件可以重讀；選擇道具後，點擊目標使用。</dd><dt><kbd>Esc</kbd></dt><dd>關閉視窗，或將手上的道具收回背包。</dd></dl><p>閱讀與輸入時角色會停下來。開過的門可以往返；漏拿物品也能回去補取。拾取道具與解開機關是兩件事，別把東西留在抽屜裡。</p><p class="opening-note">目前為第一版：三場景、三道主要謎題與最後點名。背景音樂為原創 72 BPM chill 電鋼琴與柔和和弦，搭配合成鐘聲；必要廣播以可讀文字呈現。</p><div class="modal-actions"><button class="secondary-button" id="settings-save">手動儲存</button><button class="secondary-button" id="settings-restart">重新開始</button></div>`, '移動、互動、找回一個人的位置');
+  openModal('在這裡，慢慢探索', `<p>你是來到舊校舍的校史志工。尋找線索、拾取道具，讓三年二班未完成的點名繼續下去。鐘聲依故事推進，沒有即時倒數。</p><dl class="help-controls"><dt><kbd>↑</kbd><kbd>↓</kbd><kbd>←</kbd><kbd>→</kbd></dt><dd>四方向移動角色，也可以點擊地面自動走路。</dd><dt><kbd>E</kbd></dt><dd>查看最近的物件；點擊物件標記也會先走近再互動。</dd><dt><kbd>B</kbd></dt><dd>開啟背包。文件可以重讀；選擇道具後，點擊目標使用。</dd><dt><kbd>Esc</kbd></dt><dd>關閉視窗，或將手上的道具收回背包。</dd></dl><p>閱讀與輸入時角色會停下來。開過的門可以往返；漏拿物品也能回去補取。拾取道具與解開機關是兩件事，別把東西留在抽屜裡。</p><p class="opening-note">目前為第一版：四場景、圖書館便箋支線、三道主要謎題與最後點名。背景音樂為原創 72 BPM chill 電鋼琴與柔和和弦，搭配合成鐘聲；必要廣播以可讀文字呈現。</p><div class="modal-actions"><button class="secondary-button" id="settings-save">手動儲存</button><button class="secondary-button" id="settings-restart">重新開始</button></div>`, '移動、互動、找回一個人的位置');
   $('#settings-save').addEventListener('click', () => { save(); toast(storageAvailable ? '已保存目前進度。' : '目前無法儲存進度。'); });
   $('#settings-restart').addEventListener('click', confirmRestart);
 }
@@ -348,7 +348,7 @@ function bindUseButtons(target) { modal.querySelectorAll('[data-use-item]').forE
 function showDoor(id) {
   const point = getPoint(state.scene, id), open = doorOpen(point);
   if (open) { walkToPoint(id, true); return; }
-  let message = id === 'exit' ? '出口像被一段未結束的點名鎖住。不是這把內門鑰匙能打開的門。' : id === 'broadcast-door' ? '廣播室門旁寫著：「請先把紀念名冊中的十七號補完整。」' : '內門鎖住了。鑰匙應該和待歸還物品放在一起。';
+  let message = id === 'exit' ? '出口像被一段未結束的點名鎖住。不是這把內門鑰匙能打開的門。' : id === 'library-door' ? '圖書館的校史資料還在整理，請先在紀念名冊確認十七號的姓名。' : id === 'broadcast-door' ? '廣播室門旁寫著：「請先把紀念名冊中的十七號補完整。」' : '內門鎖住了。鑰匙應該和待歸還物品放在一起。';
   openModal(point.name, `<img class="modal-art" src="${art.door}" alt="鎖住的門"><p>${message}</p>${id === 'class-door' && state.scene === 'S01' && state.inventory.includes('I03') ? '<div class="modal-actions"><button class="primary-button" data-use-item="I03">使用鑰匙開門</button></div>' : '<p class="opening-note">可以先回頭探索。必要道具不會因為用錯位置而消失。</p>'}`, '通路尚未開啟');
   bindUseButtons(id);
 }
@@ -410,7 +410,7 @@ function travelIfAtDoor(timestamp) {
   const point = WORLD[state.scene].points.find(p => p.kind === 'door' && distance(state.player, p) < 26);
   if (!point || (state.ended && point.id === 'exit')) return false;
   if (!doorOpen(point)) {
-    if (timestamp - blockedDoorAt > 3500) { toast(point.id === 'exit' ? '最後的點名還沒結束，校舍出口尚未開放。' : point.id === 'broadcast-door' ? '先把紀念名冊的姓名補回來。' : '內門鎖著。先從背包使用鑰匙。'); blockedDoorAt = timestamp; }
+    if (timestamp - blockedDoorAt > 3500) { toast(point.id === 'exit' ? '最後的點名還沒結束，校舍出口尚未開放。' : ['broadcast-door','library-door'].includes(point.id) ? '先把紀念名冊的姓名補回來。' : '內門鎖著。先從背包使用鑰匙。'); blockedDoorAt = timestamp; }
     path = []; intent = null; $('#destination').hidden = true; return false;
   }
   const wasEnded = state.ended;

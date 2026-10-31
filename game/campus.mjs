@@ -2,7 +2,8 @@
 const asset = file => `assets/generated/campus/${file}-v1.png`;
 export const NPCS = {
   'npc-caretaker': {
-    name: '周伯', role: '校舍管理員', image: asset('npc-caretaker'),
+    afterLetter: '原來那張字條一直夾在書裡。封存前，我會把便箋和回信放進同一份檔案；這次不會再把它們分開了。',
+    name: '周伯', role: '校舍管理員', image: 'assets/generated/campus/npc-caretaker-v2.png',
     greeting: '你也是來整理校史的？我才把掃具放好，外頭的門就推不開了。別急，先把事情一件件看清楚。',
     afterName: '原來她是畢業前轉走的。名冊少了一行，不代表那張課桌從來沒有人坐過。',
     afterEnding: '門開了，這回真的可以收工。明天我會把這裡掃乾淨，但該留下的東西，一樣都不會丟。',
@@ -13,7 +14,8 @@ export const NPCS = {
     ]
   },
   'npc-alumnus': {
-    name: '許學長', role: '回校幫忙的校友', image: asset('npc-alumnus'),
+    afterLetter: '妳找到讀書會的便箋了？我記得大家總問，故事結束之後會怎樣。現在想想，轉學也只是另一章的開始。',
+    name: '許學長', role: '回校幫忙的校友', image: 'assets/generated/campus/npc-alumnus-v2.png',
     greeting: '我也來找當年的照片。走廊怎麼又繞回同一塊門牌……像有人不想讓今天的整理草草結束。',
     afterName: '你把名字找回來了。轉學的人也和我們一起上過課，只看最後一本畢業名冊，確實會漏掉一些回憶。',
     afterEnding: '紀念頁留的是一起度過的日子，不是只有最後一起拿證書的人。這一次，整理得完整多了。',
@@ -24,7 +26,8 @@ export const NPCS = {
     ]
   },
   'npc-broadcast': {
-    name: '小禾', role: '廣播社校史志工', image: asset('npc-broadcast'),
+    afterLetter: '便箋沒有送到，回信也沒有寄出。那就讓這次廣播替他們接上吧。整理校史，原來也是幫一些話找到聽的人。',
+    name: '小禾', role: '廣播社校史志工', image: 'assets/generated/campus/npc-broadcast-v2.png',
     greeting: '我負責整理舊錄音。剛剛設備自己亮了，不過放心，我檢查過電線，沒有漏電。這裡留下的每段聲音，都有一份文字稿。',
     afterName: '交接單說的是一個人離校前做過的事。聽錄音很有氣氛，但順序還是要回到文字裡找依據。',
     afterEnding: '最後那聲「到」，我有聽見。修好機器很容易，讓一句沒說完的告別被聽見，才是今天最重要的事。',
@@ -44,17 +47,21 @@ export const PROPS = {
   'old-bench': { name: '長椅上的塗鴉', image: 'assets/objects/campus-02-student-desk-v1.png', text: '椅背刻著：「放學一起去吃冰。」旁邊又補了一句：「考完再說。」也許對找人沒有幫助，卻讓空蕩的走廊忽然有了聲音。' },
   'spare-cassette': { name: '寫著午休的卡帶', image: asset('prop-cassette'), text: '標籤寫著「午休用，請勿覆錄」。小禾說這卷只剩老舊的測試音，不是今天要排序的三段錄音稿。它留在原處就好。' },
   'power-cord': { name: '收好的舊延長線', image: 'assets/objects/campus-09-cassette-player-v1.png', text: '線已拔除並綁上停用標籤。旁邊貼著新的檢修紀錄。這不是需要剪斷或拆開的機關。' },
+  'library-ledger': { name: '讀書會借閱紀錄', image: 'assets/objects/campus-08-archive-cabinet-v1.png', text: '三年二班讀書會，借閱人：林予安。最後一筆蓋著「已歸還」，旁邊卻留著一行小字：「下次討論，想聽大家說喜歡的結尾。」書還回來了，約定卻還沒有結束。' },
+  'folded-letter': { name: '未寄出的便箋', image: 'assets/objects/campus-02-student-desk-v1.png', text: '夾在讀書會書冊裡的便箋：「給三年二班：轉學的事來得太快，我一直沒找到合適的時間說。書已經還了，借書卡卻忘了拿。如果下次有人問起十七號，請告訴他，我只是換了一間教室。等新學校的圖書館開放，我會把新的故事寫給你們。——林予安」紙上沒有地址，也沒有郵票。這是一封沒來得及交出去的告別。' },
+  'library-notice': { name: '讀書會公告與回信', image: 'assets/objects/campus-06-science-bulletin-board-v1.png', text: '公告寫著「這週的主題：故事結束後，角色去了哪裡？」背面貼著同學沒有寄出的回信：「予安，這次換我們等妳的故事。妳的座位沒有被忘記。」同一張公告的正反兩面，藏著遲到多年的對話。你終於明白，有些告別不是沒有人回應，只是沒有送到對方手裡。' },
   'archive-box': { name: '校慶節目單紙箱', image: 'assets/objects/campus-08-archive-cabinet-v1.png', text: '一疊校慶節目單：合唱、短劇、點歌時間。有人把錯字改了又改，留下好幾層筆跡。紙箱裡沒有新的通關道具，只有被認真準備過的日子。' }
 };
 const point = (id, x, y, stand) => ({ id, name: (NPCS[id] || PROPS[id]).name, kind: NPCS[id] ? 'npc' : 'flavor', x, y, stand, range: 85, sprite: NPCS[id]?.image || (['old-basketball','old-thermos','spare-cassette'].includes(id) ? PROPS[id].image : null) });
 export const CAMPUS_POINTS = {
   S01: [point('npc-caretaker',150,450,[200,450]),point('old-basketball',780,470,[730,470]),point('old-thermos',110,290,[160,290]),point('chalk-box',650,145,[650,190]),point('lost-umbrella',145,565,[190,550])],
   S02: [point('npc-alumnus',320,350,[370,350]),point('lost-notice',190,125,[190,180]),point('old-bench',350,140,[350,185])],
-  S03: [point('npc-broadcast',750,400,[700,400]),point('spare-cassette',660,300,[660,350]),point('power-cord',270,250,[270,300]),point('archive-box',800,160,[800,220])]
+  S03: [point('npc-broadcast',750,400,[700,400]),point('spare-cassette',660,300,[660,350]),point('power-cord',270,250,[270,300]),point('archive-box',800,160,[800,220])],
+  S04: [point('library-ledger',830,160,[830,220]),point('folded-letter',280,450,[325,450]),point('library-notice',500,125,[500,180])]
 };
 export function npcGreeting(id, state) {
   const npc = NPCS[id];
   if (!npc) return '';
-  return state.flags.exitOpen ? npc.afterEnding : state.solved.includes('P02') ? npc.afterName : npc.greeting;
+  return state.flags.exitOpen ? npc.afterEnding : state.clues.includes('folded-letter') ? npc.afterLetter : state.solved.includes('P02') ? npc.afterName : npc.greeting;
 }
 export function campusText(id, state) { return NPCS[id] ? npcGreeting(id,state) : PROPS[id]?.text || ''; }

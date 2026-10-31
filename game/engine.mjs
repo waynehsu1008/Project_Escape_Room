@@ -89,7 +89,7 @@ export function execute(original, action, story) {
     const p = getPoint(state.scene, action.target);
     if (!p || p.kind !== 'door' || distance(state.player, p) > 30) return fail('請親自走到門口。');
     if (state.scene === 'S01' && !state.flags.doorOpen) return fail('內門鎖住了。需要走廊資料區鑰匙。');
-    if (p.id === 'broadcast-door' && !state.solved.includes('P02')) return fail('先把紀念名冊中的姓名補完整，廣播室才會開放。');
+    if (['broadcast-door','library-door'].includes(p.id) && !state.solved.includes('P02')) return fail('先把紀念名冊中的姓名補完整，廣播室與圖書館才會開放。');
     if (p.to === 'END01') {
       if (!state.flags.exitOpen) return fail('校舍出口還沒開。最後的點名尚未結束。');
       state.ended = true; return done('你走出了校舍。離開教室的人，不該因此被擦掉。');
@@ -126,7 +126,7 @@ export function restore(raw) {
     const has = id => data.inventory.includes(id), solved = id => data.solved.includes(id), f = data.flags;
     if ((solved('P02') && (!solved('P01') || !f.doorOpen || !has('I01'))) || (solved('P03') && (!solved('P02') || !has('I04')))) return null;
     if (data.inventory.some(id => !solved(['I04', 'I05'].includes(id) ? (id === 'I04' ? 'P02' : 'P03') : 'P01'))) return null;
-    if ((f.doorOpen && !has('I03')) || (data.scene !== 'S01' && !f.doorOpen) || (data.scene === 'S03' && !solved('P02'))) return null;
+    if ((f.doorOpen && !has('I03')) || (data.scene !== 'S01' && !f.doorOpen) || (['S03','S04'].includes(data.scene) && !solved('P02'))) return null;
     if ((f.returned && !solved('P03')) || (f.photoPlaced && (!f.returned || !has('I02') || !has('I05'))) || (f.scriptPlaced && !f.photoPlaced) || (f.exitOpen && (!f.scriptPlaced || !solved('P04'))) || (solved('P04') !== f.exitOpen) || (data.ended && !f.exitOpen)) return null;
     const expectedUsed = [f.photoPlaced && 'I02', f.doorOpen && 'I03', f.scriptPlaced && 'I05'].filter(Boolean).sort();
     if (JSON.stringify([...data.used].sort()) !== JSON.stringify(expectedUsed)) return null;

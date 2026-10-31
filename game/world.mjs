@@ -21,7 +21,7 @@ export const WORLD = {
   S02: {
     name: '走廊資料區', subtitle: '熟悉的門牌 · 陌生的名字', number: '02',
     image: 'assets/maps/campus-02-corridor-v1.png', spawn: [500, 550],
-    floor: [[45, 150, 910, 445], [460, 580, 80, 80], [450, 110, 70, 70], [935, 310, 65, 90]],
+    floor: [[45, 150, 910, 445], [460, 580, 80, 80], [450, 110, 70, 70], [935, 310, 65, 90], [200, 110, 65, 70]],
     obstacles: [[748, 183, 155, 100], [47, 253, 38, 120], [46, 444, 50, 66], [825, 552, 92, 35]],
     points: [
       point('science', '科展公布欄', 'read', 835, 106, [825, 160], { range: 108 }),
@@ -29,6 +29,7 @@ export const WORLD = {
       point('cabinet', '廣播室資料櫃', 'pickup', 937, 106, [925, 175], { range: 100 }),
       point('class-door', '返回舊教室', 'door', 500, 625, [500, 575], { to: 'S01', arrival: [500, 540] }),
       point('broadcast-door', '通往廣播室', 'door', 480, 130, [480, 185], { to: 'S03', arrival: [500, 550] }),
+      point('library-door', '通往圖書館', 'door', 235, 130, [235, 185], { to: 'S04', arrival: [500, 550] }),
       point('exit', '校舍出口', 'door', 974, 350, [918, 350], { to: 'END01', range: 95 }),
       ...CAMPUS_POINTS.S02
     ]
@@ -44,6 +45,16 @@ export const WORLD = {
       point('script', '告別稿拾取處', 'pickup', 638, 165, [638, 235], { range: 105 }),
       point('corridor-door', '返回走廊', 'door', 500, 625, [500, 575], { to: 'S02', arrival: [480, 215] }),
       ...CAMPUS_POINTS.S03
+    ]
+  },
+  S04: {
+    name: '圖書館', subtitle: '未寄出的便箋 · 下一個故事', number: '04',
+    image: 'assets/maps/campus-03-library-v1.png', spawn: [500, 550],
+    floor: [[70, 145, 880, 440], [455, 570, 90, 90]],
+    obstacles: [[225,225,175,95],[600,225,175,95],[145,420,145,120],[700,420,135,120]],
+    points: [
+      point('corridor-door', '返回走廊', 'door', 500, 625, [500, 575], { to: 'S02', arrival: [235, 215] }),
+      ...CAMPUS_POINTS.S04
     ]
   }
 };
