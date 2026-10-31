@@ -14,22 +14,22 @@ export const WORLD = {
       point('drawer', '待歸還物品抽屜', 'puzzle', 868, 165, [868, 215]),
       point('photo', '留白的班級合照', 'use', 827, 100, [800, 177], { range: 105 }),
       point('lectern', '講台與稿架', 'use', 230, 150, [220, 215], { range: 96 }),
-      point('class-door', '通往走廊', 'door', 500, 625, [500, 580], { to: 'S02', arrival: [500, 550], range: 90 }),
+      point('class-door', '通往走廊', 'door', 500, 625, [500, 580], { to: 'S02', arrival: [650, 210], side: 'bottom', range: 90 }),
       ...CAMPUS_POINTS.S01
     ]
   },
   S02: {
     name: '走廊資料區', subtitle: '熟悉的門牌 · 陌生的名字', number: '02',
     image: 'assets/maps/campus-02-corridor-v1.png', spawn: [500, 550],
-    floor: [[45, 150, 910, 445], [460, 580, 80, 80], [450, 110, 70, 70], [935, 310, 65, 90], [200, 110, 65, 70]],
+    floor: [[45, 150, 910, 445], [460, 580, 80, 80], [450, 110, 70, 70], [935, 310, 65, 90], [200, 110, 65, 70], [615, 110, 70, 70]],
     obstacles: [[748, 183, 155, 100], [47, 253, 38, 120], [46, 444, 50, 66], [825, 552, 92, 35]],
     points: [
       point('science', '科展公布欄', 'read', 835, 106, [825, 160], { range: 108 }),
       point('register', '班級紀念名冊', 'puzzle', 817, 215, [810, 307], { range: 112 }),
       point('cabinet', '廣播室資料櫃', 'pickup', 937, 106, [925, 175], { range: 100 }),
-      point('class-door', '返回舊教室', 'door', 500, 625, [500, 575], { to: 'S01', arrival: [500, 540] }),
-      point('broadcast-door', '通往廣播室', 'door', 480, 130, [480, 185], { to: 'S03', arrival: [500, 550] }),
-      point('library-door', '通往圖書館', 'door', 235, 130, [235, 185], { to: 'S04', arrival: [500, 550] }),
+      point('class-door', '返回舊教室', 'door', 650, 130, [650, 185], { to: 'S01', arrival: [500, 550], side: 'top' }),
+      point('broadcast-door', '通往廣播室', 'door', 480, 130, [480, 185], { to: 'S03', arrival: [500, 550], side: 'top' }),
+      point('library-door', '通往圖書館', 'door', 235, 130, [235, 185], { to: 'S04', arrival: [500, 550], side: 'top' }),
       point('exit', '校舍出口', 'door', 974, 350, [918, 350], { to: 'END01', range: 95 }),
       ...CAMPUS_POINTS.S02
     ]
@@ -43,7 +43,7 @@ export const WORLD = {
       point('recordings', '散落的錄音稿', 'read', 224, 125, [225, 220], { range: 118 }),
       point('player', '錄音播放機', 'puzzle', 385, 165, [385, 232], { range: 105 }),
       point('script', '告別稿拾取處', 'pickup', 638, 165, [638, 235], { range: 105 }),
-      point('corridor-door', '返回走廊', 'door', 500, 625, [500, 575], { to: 'S02', arrival: [480, 215] }),
+      point('corridor-door', '返回走廊', 'door', 500, 625, [500, 575], { to: 'S02', arrival: [480, 215], side: 'bottom' }),
       ...CAMPUS_POINTS.S03
     ]
   },
@@ -53,7 +53,7 @@ export const WORLD = {
     floor: [[70, 145, 880, 440], [455, 570, 90, 90]],
     obstacles: [[225,225,175,95],[600,225,175,95],[145,420,145,120],[700,420,135,120]],
     points: [
-      point('corridor-door', '返回走廊', 'door', 500, 625, [500, 575], { to: 'S02', arrival: [235, 215] }),
+      point('corridor-door', '返回走廊', 'door', 500, 625, [500, 575], { to: 'S02', arrival: [235, 215], side: 'bottom' }),
       ...CAMPUS_POINTS.S04
     ]
   }

@@ -1,10 +1,12 @@
 import { WORLD, getPoint, distance, walkable } from './world.mjs';
 
+import { EXPLORABLE, migrateDiscovery } from './progress.mjs';
+
 export const SAVE_KEY = 'the-eighth-class.save.v1';
 export function createGame() {
   return {
     schema: 1, started: false, scene: 'S01', player: { x: 500, y: 530, facing: 'up' },
-    solved: [], inventory: [], used: [], bells: [], clues: [], hints: {},
+    solved: [], inventory: [], used: [], bells: [], clues: [], hints: {}, discovered: [],
     flags: { doorOpen: false, returned: false, photoPlaced: false, scriptPlaced: false, exitOpen: false },
     ended: false, muted: true, elapsed: 0
   };
@@ -25,7 +27,12 @@ export function execute(original, action, story) {
     state.started = true; bell(state, 1); return done('第一聲鐘響。請在第八次鐘聲，讓全班到齊。');
   }
   if (!state.started) return fail('請先開始遊戲。');
-  if (state.ended && !['READ', 'HINT', 'TRAVEL'].includes(action.type)) return fail('已通關，可以繼續探索與閱讀線索。');
+  if (state.ended && !['READ', 'DISCOVER', 'TRAVEL'].includes(action.type)) return fail('已通關，可以繼續探索與閱讀線索。');
+  if (action.type === 'DISCOVER') {
+    const key = `${state.scene}:${action.target}`;
+    if (!canInteract(state,action.target) || !EXPLORABLE.some(p=>p.key===key)) return fail('請走近可探索的物件。');
+    add(state.discovered,key); return done('已探索這個物件。');
+  }
   if (action.type === 'HINT') {
     const puzzle = story.puzzles.find(p => p.id === action.id);
     if (!puzzle) return fail('沒有這道謎題。');
@@ -95,7 +102,7 @@ export function execute(original, action, story) {
       state.ended = true; return done('你走出了校舍。離開教室的人，不該因此被擦掉。');
     }
     state.scene = p.to;
-    state.player = { x: p.arrival[0], y: p.arrival[1], facing: 'up' };
+    state.player = { x: p.arrival[0], y: p.arrival[1], facing: p.side === 'bottom' ? 'down' : 'up' };
     if (state.scene === 'S01' && state.solved.includes('P03')) { state.flags.returned = true; bell(state, 5); }
     return done(`來到${WORLD[state.scene].name}。`);
   }
@@ -133,7 +140,9 @@ export function restore(raw) {
     const expectedBells = [data.started && 1, solved('P01') && 2, solved('P02') && 3, solved('P03') && 4, f.returned && 5, f.photoPlaced && 6, f.scriptPlaced && 7, f.exitOpen && 8].filter(Boolean);
     if (JSON.stringify(data.bells) !== JSON.stringify(expectedBells)) return null;
     if (!data.started && (data.solved.length || data.inventory.length || data.bells.length)) return null;
+    if (data.discovered !== undefined && (!Array.isArray(data.discovered) || data.discovered.some(key=>!EXPLORABLE.some(p=>p.key===key)) || new Set(data.discovered).size!==data.discovered.length)) return null;
     const state = { ...base, started: data.started, scene: data.scene, player: { ...data.player }, solved: [...data.solved], inventory: [...data.inventory], used: [...data.used], bells: [...data.bells], clues: [...data.clues], hints: { ...data.hints }, flags: Object.fromEntries(Object.keys(base.flags).map(k => [k, data.flags[k]])), ended: data.ended, muted: data.muted, elapsed: data.elapsed };
+    state.discovered = data.discovered === undefined ? migrateDiscovery(state) : [...data.discovered];
     if (!walkable(state.scene, state.player.x, state.player.y)) { const [x, y] = WORLD[state.scene].spawn; state.player = { x, y, facing: 'up' }; }
     return state;
   } catch { return null; }
