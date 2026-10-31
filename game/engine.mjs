@@ -1,10 +1,12 @@
 import { WORLD, getPoint, distance, walkable } from './world.mjs';
 
+import { EXPLORABLE, migrateDiscovery } from './progress.mjs';
+
 export const SAVE_KEY = 'the-eighth-class.save.v1';
 export function createGame() {
   return {
     schema: 1, started: false, scene: 'S01', player: { x: 500, y: 530, facing: 'up' },
-    solved: [], inventory: [], used: [], bells: [], clues: [], hints: {},
+    solved: [], inventory: [], used: [], bells: [], clues: [], hints: {}, discovered: [],
     flags: { doorOpen: false, returned: false, photoPlaced: false, scriptPlaced: false, exitOpen: false },
     ended: false, muted: true, elapsed: 0
   };
@@ -25,7 +27,12 @@ export function execute(original, action, story) {
     state.started = true; bell(state, 1); return done('第一聲鐘響。請在第八次鐘聲，讓全班到齊。');
   }
   if (!state.started) return fail('請先開始遊戲。');
-  if (state.ended && !['READ', 'HINT', 'TRAVEL'].includes(action.type)) return fail('已通關，可以繼續探索與閱讀線索。');
+  if (state.ended && !['READ', 'DISCOVER', 'TRAVEL'].includes(action.type)) return fail('已通關，可以繼續探索與閱讀線索。');
+  if (action.type === 'DISCOVER') {
+    const key = `${state.scene}:${action.target}`;
+    if (!canInteract(state,action.target) || !EXPLORABLE.some(p=>p.key===key)) return fail('請走近可探索的物件。');
+    add(state.discovered,key); return done('已探索這個物件。');
+  }
   if (action.type === 'HINT') {
     const puzzle = story.puzzles.find(p => p.id === action.id);
     if (!puzzle) return fail('沒有這道謎題。');
@@ -34,7 +41,7 @@ export function execute(original, action, story) {
   }
   if (action.type === 'READ') {
     if (!canInteract(state, action.target)) return fail('請先走到物件附近。');
-    if (!['blackboard', 'roster', 'science', 'recordings', 'photo', 'lectern'].includes(action.target)) return fail('這裡沒有可讀取的文件。');
+    if (!['blackboard', 'roster', 'science', 'recordings', 'photo', 'lectern'].includes(action.target) && !['npc','flavor'].includes(getPoint(state.scene, action.target)?.kind)) return fail('這裡沒有可讀取的文件。');
     add(state.clues, action.target); return done('已記入探索筆記。');
   }
   if (action.type === 'SOLVE') {
@@ -89,13 +96,13 @@ export function execute(original, action, story) {
     const p = getPoint(state.scene, action.target);
     if (!p || p.kind !== 'door' || distance(state.player, p) > 30) return fail('請親自走到門口。');
     if (state.scene === 'S01' && !state.flags.doorOpen) return fail('內門鎖住了。需要走廊資料區鑰匙。');
-    if (p.id === 'broadcast-door' && !state.solved.includes('P02')) return fail('先把紀念名冊中的姓名補完整，廣播室才會開放。');
+    if (['broadcast-door','library-door'].includes(p.id) && !state.solved.includes('P02')) return fail('先把紀念名冊中的姓名補完整，廣播室與圖書館才會開放。');
     if (p.to === 'END01') {
       if (!state.flags.exitOpen) return fail('校舍出口還沒開。最後的點名尚未結束。');
       state.ended = true; return done('你走出了校舍。離開教室的人，不該因此被擦掉。');
     }
     state.scene = p.to;
-    state.player = { x: p.arrival[0], y: p.arrival[1], facing: 'up' };
+    state.player = { x: p.arrival[0], y: p.arrival[1], facing: p.side === 'bottom' ? 'down' : 'up' };
     if (state.scene === 'S01' && state.solved.includes('P03')) { state.flags.returned = true; bell(state, 5); }
     return done(`來到${WORLD[state.scene].name}。`);
   }
@@ -118,7 +125,7 @@ export function restore(raw) {
   try {
     const data = JSON.parse(raw), base = createGame();
     if (!data || data.schema !== 1 || !WORLD[data.scene] || typeof data.started !== 'boolean' || typeof data.ended !== 'boolean' || typeof data.muted !== 'boolean' || !Number.isFinite(data.elapsed) || data.elapsed < 0) return null;
-    const lists = { solved: ['P01', 'P02', 'P03', 'P04'], inventory: ['I01', 'I02', 'I03', 'I04', 'I05'], used: ['I02', 'I03', 'I05'], clues: ['blackboard', 'roster', 'science', 'recordings', 'photo', 'lectern'], bells: [1, 2, 3, 4, 5, 6, 7, 8] };
+    const lists = { solved: ['P01', 'P02', 'P03', 'P04'], inventory: ['I01', 'I02', 'I03', 'I04', 'I05'], used: ['I02', 'I03', 'I05'], clues: ['blackboard', 'roster', 'science', 'recordings', 'photo', 'lectern', ...Object.values(WORLD).flatMap(w => w.points.filter(p => ['npc','flavor'].includes(p.kind)).map(p => p.id))], bells: [1, 2, 3, 4, 5, 6, 7, 8] };
     for (const [key, allowed] of Object.entries(lists)) if (!Array.isArray(data[key]) || data[key].some(id => !allowed.includes(id)) || new Set(data[key]).size !== data[key].length) return null;
     if (!data.flags || Object.keys(base.flags).some(k => typeof data.flags[k] !== 'boolean')) return null;
     if (!data.player || !Number.isFinite(data.player.x) || !Number.isFinite(data.player.y) || !['up', 'down', 'left', 'right'].includes(data.player.facing)) return null;
@@ -126,14 +133,16 @@ export function restore(raw) {
     const has = id => data.inventory.includes(id), solved = id => data.solved.includes(id), f = data.flags;
     if ((solved('P02') && (!solved('P01') || !f.doorOpen || !has('I01'))) || (solved('P03') && (!solved('P02') || !has('I04')))) return null;
     if (data.inventory.some(id => !solved(['I04', 'I05'].includes(id) ? (id === 'I04' ? 'P02' : 'P03') : 'P01'))) return null;
-    if ((f.doorOpen && !has('I03')) || (data.scene !== 'S01' && !f.doorOpen) || (data.scene === 'S03' && !solved('P02'))) return null;
+    if ((f.doorOpen && !has('I03')) || (data.scene !== 'S01' && !f.doorOpen) || (['S03','S04'].includes(data.scene) && !solved('P02'))) return null;
     if ((f.returned && !solved('P03')) || (f.photoPlaced && (!f.returned || !has('I02') || !has('I05'))) || (f.scriptPlaced && !f.photoPlaced) || (f.exitOpen && (!f.scriptPlaced || !solved('P04'))) || (solved('P04') !== f.exitOpen) || (data.ended && !f.exitOpen)) return null;
     const expectedUsed = [f.photoPlaced && 'I02', f.doorOpen && 'I03', f.scriptPlaced && 'I05'].filter(Boolean).sort();
     if (JSON.stringify([...data.used].sort()) !== JSON.stringify(expectedUsed)) return null;
     const expectedBells = [data.started && 1, solved('P01') && 2, solved('P02') && 3, solved('P03') && 4, f.returned && 5, f.photoPlaced && 6, f.scriptPlaced && 7, f.exitOpen && 8].filter(Boolean);
     if (JSON.stringify(data.bells) !== JSON.stringify(expectedBells)) return null;
     if (!data.started && (data.solved.length || data.inventory.length || data.bells.length)) return null;
+    if (data.discovered !== undefined && (!Array.isArray(data.discovered) || data.discovered.some(key=>!EXPLORABLE.some(p=>p.key===key)) || new Set(data.discovered).size!==data.discovered.length)) return null;
     const state = { ...base, started: data.started, scene: data.scene, player: { ...data.player }, solved: [...data.solved], inventory: [...data.inventory], used: [...data.used], bells: [...data.bells], clues: [...data.clues], hints: { ...data.hints }, flags: Object.fromEntries(Object.keys(base.flags).map(k => [k, data.flags[k]])), ended: data.ended, muted: data.muted, elapsed: data.elapsed };
+    state.discovered = data.discovered === undefined ? migrateDiscovery(state) : [...data.discovered];
     if (!walkable(state.scene, state.player.x, state.player.y)) { const [x, y] = WORLD[state.scene].spawn; state.player = { x, y, facing: 'up' }; }
     return state;
   } catch { return null; }

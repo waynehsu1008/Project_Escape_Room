@@ -40,7 +40,8 @@
   "scenes": [
     {"id": "S01", "name": "舊教室", "description": "褪色課桌、黑板與一張留有空白的合照。門被未結束的點名困住。"},
     {"id": "S02", "name": "走廊資料區", "description": "科展名單、紀念名冊與廣播室資料櫃；資料上的班級和座號仍可辨識。"},
-    {"id": "S03", "name": "廣播室", "description": "老式播放設備和三段散落的錄音稿，等待被放回原本的順序。"}
+    {"id": "S03", "name": "廣播室", "description": "老式播放設備和三段散落的錄音稿，等待被放回原本的順序。"},
+    {"id": "S04", "name": "圖書館", "description": "借閱紀錄、未寄出的便箋與讀書會回信，補上林予安轉學前的約定。確認姓名後開放的可選支線。"}
   ],
   "evidence": [
     {
@@ -101,7 +102,7 @@
       "prompt": "請為紀念名冊中的十七號補回姓名。",
       "requiresPuzzles": ["P01"], "requiredItemIds": ["I01"], "evidenceIds": ["E03", "E04"],
       "answer": "林予安", "spoilerText": "林予安",
-      "rewardItemIds": ["I04"], "unlockSceneIds": ["S03"],
+      "rewardItemIds": ["I04"], "unlockSceneIds": ["S03", "S04"],
       "verifyIds": ["V-A03", "V-A05", "V-A07"],
       "revealText": "林予安。轉學交接資料顯示，她在畢業前去了另一所學校。她沒有消失，只是沒有被寫進這份畢業名單。",
       "failureText": "請確認兩份資料上的班級與座號，再比對姓名。",

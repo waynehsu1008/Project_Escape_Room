@@ -1,4 +1,6 @@
+import { exploration, scoreRun, tickClock, formatTime } from './progress.mjs';
 import { createMusic } from './music.mjs';
+import { NPCS, PROPS, campusText, npcGreeting } from './campus.mjs';
 import { createEffects, actionSound } from './effects.mjs';
 const effects = createEffects();
 const backgroundMusic = createMusic();
@@ -117,7 +119,7 @@ modal.addEventListener('close', () => { clearFormFeedback(); keys.clear(); const
 
 function doorOpen(point) {
   if (point.id === 'exit') return state.flags.exitOpen;
-  if (point.id === 'broadcast-door') return state.solved.includes('P02');
+  if (['broadcast-door','library-door'].includes(point.id)) return state.solved.includes('P02');
   if (state.scene === 'S01' && point.id === 'class-door') return state.flags.doorOpen;
   return true;
 }
@@ -130,12 +132,13 @@ function renderMap() {
     sceneId = state.scene; nearestId = null;
     $('#map-image').src = world.image; $('#map-image').alt = `${world.name}俯視探索地圖`;
     $('#scene-name').textContent = world.name; $('#scene-subtitle').textContent = world.subtitle;
-    $('#map-objects').innerHTML = world.points.map(p => `<button class="map-point ${p.kind === 'door' ? 'door' : ''}" type="button" data-target="${p.id}" aria-label="${esc(p.name)}" style="left:${p.x / 10}%;top:${p.y / 6.67}%"><span class="point-symbol">${icon(p.kind === 'door' ? 'door' : p.kind === 'read' ? 'eye' : p.kind === 'pickup' ? 'hand' : p.kind === 'use' ? 'hand' : 'lock')}</span><span class="point-label">${esc(p.name)}</span></button>`).join('');
+    $('#map-objects').innerHTML = world.points.map(p => `<button class="map-point ${p.sprite ? 'has-sprite' : ''} ${p.kind === 'door' ? 'door' : ''}" type="button" data-target="${p.id}" aria-label="${esc(p.name)}" style="left:${p.x / 10}%;top:${p.y / 6.67}%">${p.sprite ? `<img class="campus-sprite ${p.kind === 'npc' ? 'npc-sprite' : 'prop-sprite'}" src="${p.sprite}" alt="" draggable="false">` : ''}<span class="point-symbol">${icon(p.kind === 'npc' ? 'note' : p.kind === 'flavor' ? 'eye' : p.kind === 'door' ? 'door' : p.kind === 'read' ? 'eye' : p.kind === 'pickup' ? 'hand' : p.kind === 'use' ? 'hand' : 'lock')}</span><span class="point-label">${esc(p.name)}</span></button>`).join('');
     modal.close();
     $('#map-objects').querySelectorAll('[data-target]').forEach(button => button.addEventListener('click', event => { event.stopPropagation(); walkToPoint(button.dataset.target); }));
   }
   for (const p of world.points) {
     const node = $(`[data-target="${p.id}"]`);
+    node.classList.toggle('explored',state.discovered.includes(`${state.scene}:${p.id}`));
     node.classList.toggle('complete', completed(p)); node.classList.toggle('locked', p.kind === 'door' && !doorOpen(p));
   }
   game.dataset.scene = state.scene; game.dataset.bells = String(state.bells.length); game.dataset.ended = String(state.ended);
@@ -173,7 +176,8 @@ function render() {
     : `<div class="inventory-slot empty" aria-label="空的背包格"></div>`).join('');
   $('#inventory-slots').querySelectorAll('[data-item]').forEach(node => node.addEventListener('click', () => showItem(node.dataset.item)));
   $('#bag-caption').textContent = state.inventory.length ? `已收集 ${state.inventory.length}／5 件物品 · 文件可以重讀` : '重要的物品，都會好好留下。';
-  $('#journal-count').textContent = String(state.clues.length);
+  renderProgress();
+  $('#hint-button').disabled = state.ended;
   $('#sound-button').innerHTML = icon(state.muted ? 'muted' : 'sound');
   $('#sound-button').setAttribute('aria-label', state.muted ? '開啟音效' : '關閉音效');
   $('#sound-button').setAttribute('aria-pressed', String(!state.muted));
@@ -189,7 +193,7 @@ function render() {
 function showWelcome() {
   clearMovement();
   modal.className = 'modal opening-modal';
-  $('#modal-content').innerHTML = `<div class="opening-header"><p class="opening-caption">一場發生在舊校舍的探索與告別</p><h2 id="modal-title" class="opening-title">不存在的<br>第八節課</h2></div><div class="opening-body"><p>2026 年，放學後。身為校史志工的你，走進了即將封存的三年二班。門在身後合上，廣播的點名聲停在一個沒有被唸出的名字。</p><blockquote class="opening-quote">「請在第八次鐘聲，讓全班到齊。」</blockquote><p>走過教室、翻開舊資料，讓一段未完成的告別，重新被記得。</p><p class="opening-note">沒有倒數，也不用害怕答錯。用方向鍵移動，或點擊地面走近；看到物件時按 E。進度會自動保存在此瀏覽器。</p>${hasBadSave ? '<p class="form-feedback">先前的存檔無法讀取。請重新開始；遊戲不會載入不完整的進度。</p>' : ''}<div class="modal-actions">${saved ? '<button class="primary-button" id="continue-game">繼續上次的探索 →</button><button class="secondary-button" id="new-game">重新開始</button>' : '<button class="primary-button" id="new-game">走進舊教室 →</button>'}</div></div>`;
+  $('#modal-content').innerHTML = `<div class="opening-header"><p class="opening-caption">一場發生在舊校舍的探索與告別</p><h2 id="modal-title" class="opening-title">不存在的<br>第八節課</h2></div><div class="opening-body"><p>2026 年，放學後。身為校史志工的你，走進了即將封存的三年二班。門在身後合上，廣播的點名聲停在一個沒有被唸出的名字。</p><blockquote class="opening-quote">「請在第八次鐘聲，讓全班到齊。」</blockquote><p>走過教室、翻開舊資料，讓一段未完成的告別，重新被記得。</p><p class="opening-note">沒有倒數。通關依時間與新提示層數計分，閱讀時也會計時，切到背景則暫停；物件探索另外記錄。用方向鍵移動，或點擊地面走近；看到物件時按 E。進度會自動保存在此瀏覽器。</p>${hasBadSave ? '<p class="form-feedback">先前的存檔無法讀取。請重新開始；遊戲不會載入不完整的進度。</p>' : ''}<div class="modal-actions">${saved ? '<button class="primary-button" id="continue-game">繼續上次的探索 →</button><button class="secondary-button" id="new-game">重新開始</button>' : '<button class="primary-button" id="new-game">走進舊教室 →</button>'}</div></div>`;
   if (!modal.open) modal.showModal();
   $('#continue-game')?.addEventListener('click', () => { state = saved; sceneId = null; render(); modal.close(); if (state.ended) showEnding(); else { toast('已接續上次進度。'); save(); } });
   $('#new-game').addEventListener('click', () => saved ? confirmRestart() : startNew());
@@ -204,12 +208,13 @@ function confirmRestart() {
   $('#cancel-restart').addEventListener('click', () => state.started ? closeModal() : showWelcome());
 }
 function showSettings() {
-  openModal('在這裡，慢慢探索', `<p>你是來到舊校舍的校史志工。尋找線索、拾取道具，讓三年二班未完成的點名繼續下去。鐘聲依故事推進，沒有即時倒數。</p><dl class="help-controls"><dt><kbd>↑</kbd><kbd>↓</kbd><kbd>←</kbd><kbd>→</kbd></dt><dd>四方向移動角色，也可以點擊地面自動走路。</dd><dt><kbd>E</kbd></dt><dd>查看最近的物件；點擊物件標記也會先走近再互動。</dd><dt><kbd>B</kbd></dt><dd>開啟背包。文件可以重讀；選擇道具後，點擊目標使用。</dd><dt><kbd>Esc</kbd></dt><dd>關閉視窗，或將手上的道具收回背包。</dd></dl><p>閱讀與輸入時角色會停下來。開過的門可以往返；漏拿物品也能回去補取。拾取道具與解開機關是兩件事，別把東西留在抽屜裡。</p><p class="opening-note">目前為第一版：三場景、三道主要謎題與最後點名。背景音樂為原創 72 BPM chill 電鋼琴與柔和和弦，搭配合成鐘聲；必要廣播以可讀文字呈現。</p><div class="modal-actions"><button class="secondary-button" id="settings-save">手動儲存</button><button class="secondary-button" id="settings-restart">重新開始</button></div>`, '移動、互動、找回一個人的位置');
+  openModal('在這裡，慢慢探索', `<p>你是來到舊校舍的校史志工。尋找線索、拾取道具，讓三年二班未完成的點名繼續下去。鐘聲依故事推進，沒有即時倒數。</p><dl class="help-controls"><dt><kbd>↑</kbd><kbd>↓</kbd><kbd>←</kbd><kbd>→</kbd></dt><dd>四方向移動角色，也可以點擊地面自動走路。</dd><dt><kbd>E</kbd></dt><dd>查看最近的物件；點擊物件標記也會先走近再互動。</dd><dt><kbd>B</kbd></dt><dd>開啟背包。文件可以重讀；選擇道具後，點擊目標使用。</dd><dt><kbd>Esc</kbd></dt><dd>關閉視窗，或將手上的道具收回背包。</dd></dl><p>閱讀與輸入時角色會停下來。開過的門可以往返；漏拿物品也能回去補取。拾取道具與解開機關是兩件事，別把東西留在抽屜裡。</p><p class="opening-note">目前為第一版：四場景、圖書館便箋支線、三道主要謎題與最後點名。背景音樂為原創 72 BPM chill 電鋼琴與柔和和弦，搭配合成鐘聲；必要廣播以可讀文字呈現。</p><div class="modal-actions"><button class="secondary-button" id="settings-save">手動儲存</button><button class="secondary-button" id="settings-restart">重新開始</button></div>`, '移動、互動、找回一個人的位置');
   $('#settings-save').addEventListener('click', () => { save(); toast(storageAvailable ? '已保存目前進度。' : '目前無法儲存進度。'); });
   $('#settings-restart').addEventListener('click', confirmRestart);
 }
 
 function clueText(id) {
+  if (NPCS[id] || PROPS[id]) return campusText(id, state);
   if (id === 'blackboard') return state.flags.returned ? '把她的位置留下。\n最後一次點名，請也算上她。' : '請在第八次鐘聲，讓全班到齊。\n廣播：「三年二班，開始點名……十六號……」';
   if (id === 'roster') return `${story.evidence.find(e => e.id === 'E01').text}\n${story.evidence.find(e => e.id === 'E02').text}`;
   if (id === 'science') return story.evidence.find(e => e.id === 'E04').text;
@@ -234,7 +239,7 @@ function showRead(id) {
 }
 function hintArea(puzzleId) {
   const level = state.hints[puzzleId] || 0, puzzle = story.puzzles.find(p => p.id === puzzleId);
-  return `<div class="hint-area"><button id="puzzle-hint" type="button">${level >= 3 ? '重新查看三層提示' : `再給我一點方向（${level}/3）`}</button><ol class="hint-list" id="hint-list">${puzzle.hints.slice(0, level).map(text => `<li>${esc(text)}</li>`).join('')}</ol></div>`;
+  return `<div class="hint-area"><button id="puzzle-hint" type="button">${level >= 3 ? '重新查看三層提示' : `再給我一點方向（${level}/3）`}</button><p class="opening-note">新提示每層扣 250 分，重看已展開內容不扣分。</p><ol class="hint-list" id="hint-list">${puzzle.hints.slice(0, level).map(text => `<li>${esc(text)}</li>`).join('')}</ol></div>`;
 }
 function bindHints(puzzleId) {
   $('#puzzle-hint')?.addEventListener('click', () => {
@@ -246,7 +251,7 @@ function bindHints(puzzleId) {
 }
 function showHints() {
   const id = currentPuzzle(), puzzle = story.puzzles.find(p => p.id === id);
-  openModal('留一點空間，給線索', `<p>${esc(puzzle.prompt)}</p><p class="opening-note">提示不會增加鐘聲，也不會消耗道具。先試著觀察，再逐層展開。</p>${hintArea(id)}`, puzzle.title);
+  openModal('留一點空間，給線索', `<p>${esc(puzzle.prompt)}</p><p class="opening-note">每展開一層新提示，提示分扣 250；重看不扣。不增加鐘聲或消耗道具。</p>${hintArea(id)}`, puzzle.title);
   bindHints(id);
 }
 function currentPuzzle() { return state.solved.includes('P03') ? 'P04' : state.solved.includes('P02') ? 'P03' : state.solved.includes('P01') ? 'P02' : 'P01'; }
@@ -346,14 +351,16 @@ function bindUseButtons(target) { modal.querySelectorAll('[data-use-item]').forE
 function showDoor(id) {
   const point = getPoint(state.scene, id), open = doorOpen(point);
   if (open) { walkToPoint(id, true); return; }
-  let message = id === 'exit' ? '出口像被一段未結束的點名鎖住。不是這把內門鑰匙能打開的門。' : id === 'broadcast-door' ? '廣播室門旁寫著：「請先把紀念名冊中的十七號補完整。」' : '內門鎖住了。鑰匙應該和待歸還物品放在一起。';
+  let message = id === 'exit' ? '出口像被一段未結束的點名鎖住。不是這把內門鑰匙能打開的門。' : id === 'library-door' ? '圖書館的校史資料還在整理，請先在紀念名冊確認十七號的姓名。' : id === 'broadcast-door' ? '廣播室門旁寫著：「請先把紀念名冊中的十七號補完整。」' : '內門鎖住了。鑰匙應該和待歸還物品放在一起。';
   openModal(point.name, `<img class="modal-art" src="${art.door}" alt="鎖住的門"><p>${message}</p>${id === 'class-door' && state.scene === 'S01' && state.inventory.includes('I03') ? '<div class="modal-actions"><button class="primary-button" data-use-item="I03">使用鑰匙開門</button></div>' : '<p class="opening-note">可以先回頭探索。必要道具不會因為用錯位置而消失。</p>'}`, '通路尚未開啟');
   bindUseButtons(id);
 }
 function interact(id) {
   if (!state.started || !canInteract(state, id)) return;
   const point = getPoint(state.scene, id);
+  if (!['door','npc'].includes(point.kind)) act({type:'DISCOVER',target:id},false);
   if (selectedItem) return useItem(selectedItem, id);
+  if (NPCS[id] || PROPS[id]) return showCampus(id);
   if (['blackboard', 'roster', 'science', 'recordings'].includes(id)) return showRead(id);
   if (point.kind === 'door') return showDoor(id);
   if (id === 'drawer') return showPuzzle('P01');
@@ -369,9 +376,41 @@ function interact(id) {
     return showLoot('script', ['I05'], '完整告別稿', '拾取後帶回教室。合照和講台，都還在等著你。');
   }
 }
+function showCampus(id) {
+  const result = act({ type: 'READ', target: id }, false);
+  if (!result.ok) return;
+  const npc = NPCS[id], prop = PROPS[id];
+  if (npc) {
+    openModal(npc.name, `<div class="npc-conversation"><img class="npc-portrait" src="${npc.image}" alt="${esc(npc.name)}"><div><p class="npc-role">${esc(npc.role)}</p><p id="npc-dialogue" role="status">${esc(npcGreeting(id,state))}</p></div></div><div class="dialogue-options">${npc.topics.map(([question],i) => `<button type="button" class="secondary-button" data-topic="${i}">${esc(question)}</button>`).join('')}</div><div class="modal-actions"><button type="button" class="text-button" id="leave-conversation">先去別處看看 →</button></div>`, '校園相遇 · 可自由交談');
+    modal.querySelectorAll('[data-topic]').forEach(button => button.addEventListener('click', () => {
+      const index = Number(button.dataset.topic);
+      $('#npc-dialogue').textContent = npc.topics[index][1];
+      effects.play('paper');
+      modal.querySelectorAll('[data-topic]').forEach(b => b.setAttribute('aria-pressed',String(b === button)));
+    }));
+    $('#leave-conversation').addEventListener('click', closeModal);
+  } else {
+    openModal(prop.name, `<img class="modal-art" src="${prop.image}" alt="${esc(prop.name)}"><div class="clue-paper">${esc(prop.text)}</div><p class="opening-note" style="margin-top:18px">你把這段校園日常記在探索筆記裡。物品留在原處，不占用背包。</p>`, '校園物件 · 查看與觀察');
+  }
+}
+function renderProgress() {
+  const n=Math.floor(state.elapsed), found=state.discovered.length;
+  const runTime=modal.querySelector('[data-run-time]');
+  if(runTime && runTime.textContent!==formatTime(n)) runTime.textContent=formatTime(n);
+  if(renderProgress.seconds===n && renderProgress.found===found)return;
+  renderProgress.seconds=n;renderProgress.found=found;
+  const progress=exploration(state);
+  $('#journal-count').textContent=`${progress.found}/${progress.total} · ${formatTime(state.elapsed)}`;
+}
+function resultMarkup() {
+  const r=scoreRun(state), e=exploration(state);
+  return `<section class=run-result><h3>${state.ended ? `通關成績：${r.total.toLocaleString()} 分` : '本次探索紀錄'}</h3><p>用時 <span data-run-time>${formatTime(r.seconds)}</span> · 提示 ${r.hints} 層 · 已探索 ${e.found}/${e.total} 件</p>${state.ended ? `<p>通關 ${r.base} ＋ 提示分 ${r.hintBonus} ＋ 時間分 ${r.timeBonus}</p>` : '<p>通關後結算：基本分 4,000 ＋ 提示分（最高 3,000，每層扣 250）＋ 時間分 ⌊3,000 ÷（1 ＋ 秒數 ÷ 600）⌋。</p>'}<p class=opening-note>閱讀與解題計時；切到背景或離線暫停。探索進度另外記錄，不加扣分。通關後成績固定，可繼續補探索。</p></section>`;
+}
 function showJournal() {
   const entries = state.clues.map(id => { const point = Object.values(WORLD).flatMap(w => w.points).find(p => p.id === id); return `<article class="journal-entry"><h3>${esc(point?.name || id)}</h3><p>${esc(clueText(id))}</p></article>`; }).join('');
-  openModal('探索筆記', entries || '<p>筆記還是空白。走近黑板、文件或物件互動，看過的線索會留在這裡。</p>', '記住看過的線索，不代替你解答');
+  const progress=exploration(state);
+  const list=Object.entries(WORLD).map(([scene,w])=>`<section class=exploration-group><h3>${esc(w.name)}</h3><ul>${progress.items.filter(p=>p.scene===scene).map(p=>`<li class="${p.found?'found':'unseen'}">${p.found?'✓ 已探索':'○ 未探索'} · ${esc(p.name)}</li>`).join('')}</ul></section>`).join('');
+  openModal('探索筆記', resultMarkup()+`<h3>物件清單 · ${progress.found}/${progress.total}</h3><p class=opening-note>走近並互動才算發現；同一物件只計一次。門與人物對話不列入物件總數，背包道具另計。</p><div class=exploration-list>${list}</div><h3>已閱讀的線索與對話</h3>`+(entries || '<p>目前尚無閱讀筆記。</p>'), '探索進度、計分規則與閱讀筆記');
 }
 function walkToPoint(id, forceDoor = false) {
   if (!state.started || modal.open) return;
@@ -390,7 +429,7 @@ function travelIfAtDoor(timestamp) {
   const point = WORLD[state.scene].points.find(p => p.kind === 'door' && distance(state.player, p) < 26);
   if (!point || (state.ended && point.id === 'exit')) return false;
   if (!doorOpen(point)) {
-    if (timestamp - blockedDoorAt > 3500) { toast(point.id === 'exit' ? '最後的點名還沒結束，校舍出口尚未開放。' : point.id === 'broadcast-door' ? '先把紀念名冊的姓名補回來。' : '內門鎖著。先從背包使用鑰匙。'); blockedDoorAt = timestamp; }
+    if (timestamp - blockedDoorAt > 3500) { toast(point.id === 'exit' ? '最後的點名還沒結束，校舍出口尚未開放。' : ['broadcast-door','library-door'].includes(point.id) ? '先把紀念名冊的姓名補回來。' : '內門鎖著。先從背包使用鑰匙。'); blockedDoorAt = timestamp; }
     path = []; intent = null; $('#destination').hidden = true; return false;
   }
   const wasEnded = state.ended;
@@ -406,7 +445,7 @@ function travelIfAtDoor(timestamp) {
   return true;
 }
 function showEnding() {
-  openModal('一個都沒有少', `<img class="ending-portrait" src="${itemArt.I02}" alt="被放回班級紀念冊的林予安個人照"><p>你走出了校舍。第八節課，終於下課了。</p><p class="ending-quote">「離開教室的人，<br>不該因此被擦掉。」</p><p>當年畢業前轉學的林予安，沒有消失。她的照片、名字與告別，重新成為班級記憶的一部分。</p><section class="memorial"><h3>曾在這一班的我們 · 34 位同學</h3><div class="roster-grid">${Array.from({ length: 34 }, (_, i) => `<span ${i === 16 ? 'style="background:#d1dac0;border-color:#829173"' : ''}>${String(i + 1).padStart(2, '0')}${i === 16 ? ' · 到' : ''}</span>`).join('')}</div><p class="memorial-note">十七號：林予安，畢業前轉學。這是校史紀念頁，不是當年的正式畢業名冊。</p></section><div class="modal-actions"><button class="secondary-button" id="ending-restart">重新走進故事</button><button class="secondary-button" id="ending-return">看看留下的校舍</button></div>`, 'END01 · 最後一次點名，完整了');
+  openModal('一個都沒有少', `<img class="ending-portrait" src="${itemArt.I02}" alt="被放回班級紀念冊的林予安個人照"><p>你走出了校舍。第八節課，終於下課了。</p>${resultMarkup()}<p class="ending-quote">「離開教室的人，<br>不該因此被擦掉。」</p><p>當年畢業前轉學的林予安，沒有消失。她的照片、名字與告別，重新成為班級記憶的一部分。</p><section class="memorial"><h3>曾在這一班的我們 · 34 位同學</h3><div class="roster-grid">${Array.from({ length: 34 }, (_, i) => `<span ${i === 16 ? 'style="background:#d1dac0;border-color:#829173"' : ''}>${String(i + 1).padStart(2, '0')}${i === 16 ? ' · 到' : ''}</span>`).join('')}</div><p class="memorial-note">十七號：林予安，畢業前轉學。這是校史紀念頁，不是當年的正式畢業名冊。</p></section><div class="modal-actions"><button class="secondary-button" id="ending-restart">重新走進故事</button><button class="secondary-button" id="ending-return">看看留下的校舍</button></div>`, 'END01 · 最後一次點名，完整了');
   $('#ending-restart').addEventListener('click', confirmRestart);
   $('#ending-return').addEventListener('click', closeModal);
 }
@@ -460,11 +499,15 @@ function bindControls() {
   }
 }
 let previousFrame = 0;
+document.addEventListener('visibilitychange',()=>{previousFrame=performance.now();});
 function frame(timestamp) {
-  const dt = Math.min(.04, Math.max(0, (timestamp - previousFrame) / 1000)); previousFrame = timestamp;
+  const elapsedDelta = previousFrame ? Math.max(0,(timestamp-previousFrame)/1000) : 0;
+  const dt = Math.min(.04,elapsedDelta); previousFrame = timestamp;
+  state=tickClock(state,elapsedDelta,!document.hidden);
+  renderProgress();
   let moving = false;
   if (state.started && !modal.open && !document.hidden) {
-    if (!state.ended) state.elapsed += dt;
+
     let dx = Number(keys.has('arrowright') || keys.has('d')) - Number(keys.has('arrowleft') || keys.has('a'));
     let dy = Number(keys.has('arrowdown') || keys.has('s')) - Number(keys.has('arrowup') || keys.has('w'));
     const speed = 190;
@@ -486,8 +529,8 @@ function frame(timestamp) {
       const next = intent; intent = null; $('#destination').hidden = true;
       if (!next.door) interact(next.target);
     } else if (!path.length) $('#destination').hidden = true;
-    if (timestamp - lastSaveTime > 2000) { save(); lastSaveTime = timestamp; }
   }
+  if (state.started && !document.hidden && timestamp-lastSaveTime>2000) {save();lastSaveTime=timestamp;}
   renderPosition(moving); requestAnimationFrame(frame);
 }
 

@@ -1,0 +1,15 @@
+.map-point.has-sprite{width:65px;height:82px;padding:0;transform:translate(-50%,-85%)}
+.map-point.has-sprite:active{transform:translate(-50%,-84%)!important}
+.campus-sprite{width:100%;height:100%;object-fit:contain;image-rendering:pixelated;pointer-events:none;filter:drop-shadow(0 3px 2px #101d2440)}
+.map-point.has-sprite .point-symbol{position:absolute;right:2px;top:2px;width:19px;height:19px;background:#ebdfba;color:#314538}
+.map-point.has-sprite .point-label{bottom:100%}.map-point.has-sprite.near .campus-sprite{filter:drop-shadow(0 0 4px #f5dfa5)}
+.map-point.has-sprite:has(.prop-sprite){width:48px;height:48px;transform:translate(-50%,-70%)}
+.npc-conversation{display:grid;grid-template-columns:145px minmax(0,1fr);gap:22px;align-items:center;min-height:210px}
+.npc-portrait{width:145px;height:210px;object-fit:contain;image-rendering:pixelated;background:#e9e6d8;border:1px solid #c4c9b6}
+.npc-role{font-size:11px!important;color:#7a836d;letter-spacing:.12em}.dialogue-options{display:grid;gap:9px;margin-top:20px}
+.dialogue-options button{text-align:left;min-height:44px}.dialogue-options button[aria-pressed=true]{background:#dce4d0;border-color:#7b8b64}
+@media(max-width:600px){.npc-conversation{grid-template-columns:85px minmax(0,1fr);gap:13px;min-height:160px}.npc-portrait{width:85px;height:150px}.npc-conversation p{font-size:12px;line-height:1.9}.map-point.has-sprite{width:43px;height:57px}.map-point.has-sprite:has(.prop-sprite){width:34px;height:34px}.map-point.has-sprite .point-symbol{width:15px;height:15px}.map-point.has-sprite .point-symbol svg{width:9px;height:9px}}
+
+.run-result{border:1px solid #aab39a;background:#e9edde;padding:16px;margin:14px 0 22px}.run-result h3{font-size:20px}.run-result p{margin:8px 0;font-size:13px}.exploration-list{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:18px 0 28px}.exploration-group{border:1px solid #c5c9b9;padding:12px}.exploration-group ul{list-style:none;padding:0;margin:10px 0 0}.exploration-group li{font-size:12px;padding:5px 0}.exploration-group .found{color:#47704e}.exploration-group .unseen{color:#655d4c}.journal-count{font-variant-numeric:tabular-nums;white-space:nowrap;font-size:11px}@media(max-width:600px){.exploration-list{grid-template-columns:1fr}.run-result h3{font-size:17px}}
+
+.map-point.explored .point-symbol{border-color:#cae0b4;background:#476041}.map-point.door .point-label{opacity:1}

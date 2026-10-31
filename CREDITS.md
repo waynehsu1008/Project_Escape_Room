@@ -1,5 +1,9 @@
 # CREDITS.md
 
+## 校園 NPC 與可選物件（2026-10-31）
+
+新增 assets/generated/campus/ 下三張虛構 NPC（周伯、許學長、小禾）與三張物件（籃球籃、保溫瓶、卡帶），均以 OpenAI 內建 image_gen 各別全新生成，保留原圖與透明通道，沒有下載第三方人物或遊戲物件。每張完整提示詞見同名 .prompt.txt，清單見該目錄 README.md。新增對話與觀察文字由本專案以 AI 協助原創撰寫，供團隊審閱；不是史料、真實人物證詞或新的必要通關條件。其他觀察點沿用既有素材，原授權紀錄不變。
+
 ## 第一版新增與採用素材（2026-10-30）
 
 本次依使用者要求，以 OpenAI 內建 image_gen 生成缺少的圖檔，未使用 CLI/API fallback。下列檔案均已保存於專案，完整提示詞在同目錄的同名 .prompt.txt；生成原圖未覆蓋原有素材。
@@ -91,3 +95,8 @@
 以 Web Audio 原創合成的 72 BPM chill 背景音樂，使用柔和電鋼琴音色、低音與延伸和弦，無外部錄音、取樣或下載素材。實作：game/music.mjs。此音樂程式及其生成的原創樂曲採 CC0-1.0 公眾領域貢獻；不影響專案其他素材的授權。
 
 試聽檔：assets/audio/after-class-preview.wav（約 30 秒，原創樂曲離線合成預覽）；重建指令：node scripts/render-music-preview.mjs。WAV 與渲染器同採 CC0-1.0。
+
+
+## NPC v2 與圖書館
+
+三位 NPC v2 以內建 imagegen 生成，以既有 player-four-directions-v1.png 作畫風與比例參考，原 NPC v1 作角色身分參考。檔案與逐張完整提示存於 assets/generated/campus/npc-*-v2.png 與同名 .prompt.txt；保留 v1。圖書館沿用 assets/maps/campus-03-library-v1.png，來源與授權沿用原素材紀錄。便箋支線文字為本專案新增。
