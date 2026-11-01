@@ -3,7 +3,8 @@ const world = document.querySelector('.game-world');
 const strip = document.querySelector('.interaction-strip');
 function fitMap() {
   if (!panel || !world || !strip) return;
-  const width = Math.max(1, Math.floor(Math.min(panel.clientWidth - 4, (panel.clientHeight - strip.offsetHeight - 6) * 1000 / 667)));
+  const width=Math.max(1,Math.floor(Math.min(innerWidth-24,(panel.clientHeight-strip.offsetHeight-6)*1000/667)));
+  document.querySelector('#app').style.setProperty('--map-width',`${width}px`);
   world.style.width = `${width}px`;
   strip.style.width = `${width}px`;
   const controls = panel.querySelector('.touch-controls');
