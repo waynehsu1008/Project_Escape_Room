@@ -100,3 +100,8 @@
 ## NPC v2 與圖書館
 
 三位 NPC v2 以內建 imagegen 生成，以既有 player-four-directions-v1.png 作畫風與比例參考，原 NPC v1 作角色身分參考。檔案與逐張完整提示存於 assets/generated/campus/npc-*-v2.png 與同名 .prompt.txt；保留 v1。圖書館沿用 assets/maps/campus-03-library-v1.png，來源與授權沿用原素材紀錄。便箋支線文字為本專案新增。
+
+
+## 黑白像素選單圖示
+
+目標、地圖、背包與筆記四張圖示使用內建 imagegen 生成，透明背景，存於 assets/generated/menu/*-v1.png；逐張完整提示存於同名 .prompt.txt，保留生成原圖。

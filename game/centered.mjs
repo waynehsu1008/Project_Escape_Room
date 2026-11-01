@@ -19,3 +19,15 @@ menu.onclick=()=>{const expanded=app.classList.toggle('menu-expanded');menu.setA
 for(const button of rail.children)button.addEventListener('click',()=>{app.classList.remove('menu-expanded');menu.setAttribute('aria-expanded','false');});
 const nearby=document.querySelector('#nearby-text'),strip=document.querySelector('.interaction-strip');function syncNearby(){strip.classList.toggle('has-nearby',!document.querySelector('#interact-button').disabled);}
 new MutationObserver(syncNearby).observe(document.querySelector('#interact-button'),{attributes:true});syncNearby();
+
+const footer=document.querySelector('.footer'),controls=footer.querySelector('p'),interactButton=document.querySelector('#interact-button');
+controls.className='action-groups';controls.innerHTML='<span class="move-guide"><kbd>↑↓←→</kbd>／<kbd>WASD</kbd> 移動</span>';
+controls.append(interactButton);
+const bagAction=document.createElement('button');bagAction.type='button';bagAction.className='bar-action';bagAction.innerHTML='<kbd>B</kbd> 背包';bagAction.onclick=()=>document.querySelector('#bag-button').click();controls.append(bagAction);
+const escapeGuide=document.createElement('span');escapeGuide.className='escape-guide';escapeGuide.innerHTML='<kbd>Esc</kbd> 關閉';controls.append(escapeGuide);
+const mobileMenu=document.createElement('button');mobileMenu.type='button';mobileMenu.className='bar-action mobile-menu';mobileMenu.textContent='選單';mobileMenu.onclick=()=>menu.click();controls.append(mobileMenu);
+function updateInteraction(){const near=document.querySelector('.map-point.near');const name=near?.getAttribute('aria-label');const isNpc=Boolean(near?.querySelector('.npc-sprite'));const label=name?(isNpc?'與'+name+'對話':'查看'+name):'查看物件';const current=interactButton.querySelector('.interaction-label');if(current?.textContent===label)return;interactButton.innerHTML='<kbd>E</kbd> <span class="interaction-label"></span>';interactButton.querySelector('.interaction-label').textContent=label;}
+new MutationObserver(updateInteraction).observe(document.querySelector('#map-objects'),{subtree:true,attributes:true,attributeFilter:['class'],childList:true});updateInteraction();
+
+const menuIcons=['objective','map','bag','notes'];
+[...rail.children].forEach((button,i)=>{const icon=document.createElement('img');icon.src=`assets/generated/menu/${menuIcons[i]}-v1.png`;icon.alt='';icon.className='menu-pixel-icon';button.prepend(icon);});
