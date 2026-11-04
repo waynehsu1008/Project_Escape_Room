@@ -15,7 +15,7 @@ export const NPCS = {
   },
   'npc-alumnus': {
     afterLetter: '妳找到讀書會的便箋了？我記得大家總問，故事結束之後會怎樣。現在想想，轉學也只是另一章的開始。',
-    name: '許學長', role: '回校幫忙的校友', image: 'assets/generated/campus/npc-alumnus-v2.png',
+    name: '王學長', role: '回校幫忙的校友', image: 'assets/generated/campus/npc-alumnus-v2.png',
     greeting: '我也來找當年的照片。走廊怎麼又繞回同一塊門牌……像有人不想讓今天的整理草草結束。',
     afterName: '你把名字找回來了。轉學的人也和我們一起上過課，只看最後一本畢業名冊，確實會漏掉一些回憶。',
     afterEnding: '紀念頁留的是一起度過的日子，不是只有最後一起拿證書的人。這一次，整理得完整多了。',

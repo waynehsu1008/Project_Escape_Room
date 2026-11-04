@@ -5,7 +5,7 @@
 | 檔案 | 用途 |
 | --- | --- |
 | npc-caretaker-v1.png | 管理員周伯：S01 地圖人物與對話立繪 |
-| npc-alumnus-v1.png | 許學長：S02 地圖人物與對話立繪 |
+| npc-alumnus-v1.png | 王學長：S02 地圖人物與對話立繪 |
 | npc-broadcast-v1.png | 廣播社志工小禾：S03 地圖人物與對話立繪 |
 | prop-basketball-v1.png | 可查看的籃球器材籃 |
 | prop-thermos-v1.png | 可查看的舊保溫瓶 |
