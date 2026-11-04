@@ -5,8 +5,8 @@ import { NPCS, PROPS, CAMPUS_POINTS, npcGreeting } from '../game/campus.mjs';
 import { createGame, execute, restore, serialize } from '../game/engine.mjs';
 import { WORLD, walkable, findPath } from '../game/world.mjs';
 const story = JSON.parse(await readFile(new URL('../content/story.json',import.meta.url),'utf8'));
-test('三位 NPC 與十二件校園物件均可到達，沒有改動主線必要道具', () => {
-  assert.equal(Object.keys(NPCS).length,3); assert.equal(Object.keys(PROPS).length,12);
+test('三位 NPC 與十六件校園物件均可到達，沒有改動主線必要道具', () => {
+  assert.equal(Object.keys(NPCS).length,3); assert.equal(Object.keys(PROPS).length,16);
   for (const [scene,points] of Object.entries(CAMPUS_POINTS)) for (const p of points) {
     assert.ok(walkable(scene,...p.stand),p.id);
     assert.ok(findPath(scene,WORLD[scene].spawn,p.stand).length,p.id);

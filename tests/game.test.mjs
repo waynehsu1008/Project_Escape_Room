@@ -27,6 +27,8 @@ function reachThird() {
   let state = perform(portal(collectFirst(), 'class-door'), { type: 'TRAVEL', target: 'class-door' }).state;
   state = perform(near(state, 'register'), { type: 'SOLVE', id: 'P02', answer: '林予安' }).state;
   state = perform(near(state, 'cabinet'), { type: 'PICKUP', id: 'I04' }).state;
+  state = perform(near(state, 'broadcast-door'), { type: 'UNLOCK_BROADCAST', answer: '308' }).state;
+  state = perform(state, { type: 'READ_HANDOFF' }).state;
   state = perform(portal(state, 'broadcast-door'), { type: 'TRAVEL', target: 'broadcast-door' }).state;
   return near(state, 'player');
 }
@@ -130,7 +132,7 @@ test('V-B12：照片、告別稿、回應固定順序，不能只持有或提早
   assert.equal(state.ended, false);
   assert.equal(perform(near(state, 'lectern'), { type: 'ANSWER' }).ok, false);
   assert.equal(perform(near(state, 'lectern'), { type: 'USE', id: 'I05', target: 'lectern' }).ok, false);
-  state = perform(near(state, 'photo'), { type: 'USE', id: 'I02', target: 'photo' }).state;
+  state = perform(near(state, 'photo'), { type: 'USE', id: 'I02', target: 'photo', slot: 4 }).state;
   assert.deepEqual(state.bells, [1, 2, 3, 4, 5, 6]);
   assert.equal(state.flags.exitOpen, false);
   state = perform(near(state, 'lectern'), { type: 'USE', id: 'I05', target: 'lectern' }).state;
@@ -139,7 +141,7 @@ test('V-B12：照片、告別稿、回應固定順序，不能只持有或提早
 });
 test('V-B13／V-I01：完整路線必須回應後親自走到出口才 END01', () => {
   let state = finalReady();
-  state = perform(near(state, 'photo'), { type: 'USE', id: 'I02', target: 'photo' }).state;
+  state = perform(near(state, 'photo'), { type: 'USE', id: 'I02', target: 'photo', slot: 4 }).state;
   state = perform(near(state, 'lectern'), { type: 'USE', id: 'I05', target: 'lectern' }).state;
   state = perform(state, { type: 'ANSWER' }).state;
   assert.equal(state.flags.exitOpen, true);
@@ -156,10 +158,10 @@ test('V-B13／V-I01：完整路線必須回應後親自走到出口才 END01', (
 test('V-I02：漏拿照片或告別稿可返回補拿，沒有永久卡死', () => {
   let state = finalReady();
   state.inventory = state.inventory.filter(id => id !== 'I02');
-  assert.equal(perform(near(state, 'photo'), { type: 'USE', id: 'I02', target: 'photo' }).ok, false);
+  assert.equal(perform(near(state, 'photo'), { type: 'USE', id: 'I02', target: 'photo', slot: 4 }).ok, false);
   state = perform(near(state, 'drawer'), { type: 'PICKUP', id: 'I02' }).state;
   assert.ok(state.inventory.includes('I02'));
-  assert.equal(perform(near(state, 'photo'), { type: 'USE', id: 'I02', target: 'photo' }).ok, true);
+  assert.equal(perform(near(state, 'photo'), { type: 'USE', id: 'I02', target: 'photo', slot: 4 }).ok, true);
 });
 test('V-B14：提示逐層增加至三層，不增加鐘聲', () => {
   let state = start();
@@ -187,7 +189,7 @@ test('V-B17：未知動作與未開始的機關不改動狀態', () => {
 
 test('V-I06：通關後仍可移動、往返閱讀，存檔保留通關與八聲鐘', () => {
   let state = finalReady();
-  state = perform(near(state, 'photo'), { type: 'USE', id: 'I02', target: 'photo' }).state;
+  state = perform(near(state, 'photo'), { type: 'USE', id: 'I02', target: 'photo', slot: 4 }).state;
   state = perform(near(state, 'lectern'), { type: 'USE', id: 'I05', target: 'lectern' }).state;
   state = perform(state, { type: 'ANSWER' }).state;
   state = perform(portal(state, 'class-door'), { type: 'TRAVEL', target: 'class-door' }).state;
@@ -201,4 +203,55 @@ test('V-I06：通關後仍可移動、往返閱讀，存檔保留通關與八聲
   assert.equal(state.ended, true);
   assert.deepEqual(state.bells, [1, 2, 3, 4, 5, 6, 7, 8]);
   assert.deepEqual(restore(serialize(state)), state);
+});
+
+test('V-PROP02：廣播室須輸入正確密碼，錯誤不改狀態', () => {
+  let state = perform(portal(collectFirst(), 'class-door'), { type: 'TRAVEL', target: 'class-door' }).state;
+  state = perform(near(state, 'register'), { type: 'SOLVE', id: 'P02', answer: '林予安' }).state;
+  state = portal(state, 'broadcast-door');
+  assert.equal(perform(state, { type: 'TRAVEL', target: 'broadcast-door' }).ok, false);
+  assert.equal(perform(state, { type: 'UNLOCK_BROADCAST', answer: '803' }).state, state);
+  const opened = perform(state, { type: 'UNLOCK_BROADCAST', answer: '308' });
+  assert.equal(opened.ok, true);
+  assert.deepEqual(opened.state.bells, state.bells);
+  assert.equal(restore(serialize(opened.state)).flags.broadcastOpen, true);
+});
+
+test('V-PROP03：未讀交接單觸發排序陷阱，閱讀後可重試', () => {
+  const state = reachThird();
+  const unread = { ...state, flags: { ...state.flags, handoffRead: false } };
+  const attempt = { type: 'SOLVE', id: 'P03', answer: story.departureOrder };
+  const trapped = perform(unread, attempt);
+  assert.equal(trapped.code, 'unread-handoff');
+  assert.equal(trapped.state, unread);
+  const read = perform(unread, { type: 'READ_HANDOFF' });
+  assert.equal(read.ok, true);
+  assert.equal(perform(read.state, attempt).ok, true);
+});
+
+test('V-PROP04：九宮格錯位保留照片，正確站位才能放回', () => {
+  const state = near(finalReady(), 'photo');
+  const use = { type: 'USE', id: 'I02', target: 'photo', slot: 4 };
+  assert.equal(perform(state, { ...use, slot: 0 }).state, state);
+  const placed = perform(state, { ...use, slot: 4 });
+  assert.equal(placed.state.flags.photoPlaced, true);
+  assert.equal(perform(placed.state, { ...use, slot: 4 }).state.bells.length, 6);
+});
+
+test('V-PROP01：35 號姓名不能取代 17 號，錯誤後仍可解題', () => {
+  const state = near(perform(portal(collectFirst(), 'class-door'), { type: 'TRAVEL', target: 'class-door' }).state, 'register');
+  const wrong = perform(state, { type: 'SOLVE', id: 'P02', answer: '林予晴' });
+  assert.equal(wrong.state, state);
+  assert.match(wrong.message, /日期與身分/);
+  assert.equal(perform(state, { type: 'SOLVE', id: 'P02', answer: '林予安' }).ok, true);
+});
+
+test('舊版已完成排序的存檔可接續九宮格', () => {
+  const legacy = finalReady();
+  delete legacy.flags.broadcastOpen;
+  delete legacy.flags.handoffRead;
+  const state = restore(serialize(legacy));
+  assert.equal(state.flags.broadcastOpen, true);
+  assert.equal(state.flags.handoffRead, true);
+  assert.deepEqual(state.bells, legacy.bells);
 });

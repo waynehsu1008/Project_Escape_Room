@@ -1,5 +1,6 @@
 // Original procedural interaction sounds. Code and generated sounds: CC0-1.0.
 export function actionSound(action, result, before) {
+  if (result.code === 'unread-handoff') return 'static';
   if (!result.ok) return ['SOLVE', 'USE', 'PICKUP', 'ANSWER', 'TRAVEL'].includes(action.type) ? 'error' : null;
   const after = result.state;
   if (action.type === 'SOLVE' && after.solved.length > before.solved.length) return 'success';
@@ -19,6 +20,7 @@ const sounds = {
   unlock: [[1600, 0, .035, .025], [2200, .04, .055, .025], [190, .12, .18, .065, 85]],
   door: [[120, 0, .18, .075, 75], [235, .11, .34, .025, 155], [90, .36, .13, .045, 55]],
   success: [[523, 0, .22, .045], [659, .09, .25, .04], [784, .18, .4, .04]],
+  static: [[173, 0, .08, .03, 640], [83, .06, .14, .025, 220]],
   error: [[220, 0, .11, .035, 185], [165, .12, .17, .025, 140]],
   ending: [[523, 0, .5, .035], [659, .12, .6, .035], [784, .24, .7, .03], [1047, .4, .9, .025]]
 };
@@ -50,7 +52,7 @@ export function createEffects() {
           oscillator.addEventListener('ended', () => gain.disconnect(), { once: true });
           oscillator.start(start + delay); oscillator.stop(start + delay + length + .01);
         }
-        if (['door', 'paper', 'unlock'].includes(name)) {
+        if (['door', 'paper', 'unlock', 'static'].includes(name)) {
           if (!noise) {
             noise = context.createBuffer(1, context.sampleRate * .4, context.sampleRate);
             const data = noise.getChannelData(0); let seed = 1958;

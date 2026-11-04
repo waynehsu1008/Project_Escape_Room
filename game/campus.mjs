@@ -39,6 +39,10 @@ export const NPCS = {
   }
 };
 export const PROPS = {
+  'return-calendar': { name: '舊教室日曆', image: 'assets/objects/campus-01-chalkboard-v1.png', text: '1998 年 5 月：18 日（一）、19 日（二）、20 日（三）、21 日（四）、22 日（五）。借閱章鎖規則：星期一至日編為 1–7，後接兩位節次。例如星期二第 4 節是 204。' },
+  'absence-list': { name: '35 號休學名單', image: 'assets/objects/campus-06-science-bulletin-board-v1.png', text: '三年二班舊座號 35 · 林予晴。1998/05/12 辦理休學並出國，未參加 5/21 校內科展，也未於 5/20 在校還書。附註：本名單為學期初舊編號，不列入後來的 34 人班級名冊。' },
+  'photo-left-note': { name: '合照字條：十六號', image: 'assets/objects/campus-02-student-desk-v1.png', text: '「16 號站在我左邊，我們在同一排。」——17 號。請以觀看照片的左右為準。' },
+  'photo-monitor-note': { name: '合照字條：風紀股長', image: 'assets/objects/campus-08-archive-cabinet-v1.png', text: '「我沒站在風紀股長正旁邊。」——17 號。這裡的旁邊指上下左右緊鄰的位置。九宮格只擷取全班合照的一小區。' },
   'old-basketball': { name: '器材籃裡的籃球', image: asset('prop-basketball'), text: '球皮已磨平，籃上掛著「體育課後請歸還」的牌子。籃底只有粉筆灰，沒有鑰匙。這是一段校園日常，不是必需的通關道具。' },
   'old-thermos': { name: '忘記帶走的保溫瓶', image: asset('prop-thermos'), text: '瓶底貼著「08」的班級清潔輪值貼紙。瓶蓋轉得開，裡面是空的。數字只是物品管理標記，並非抽屜的答案。' },
   'chalk-box': { name: '粉筆與值日生字條', image: 'assets/objects/campus-01-chalkboard-v1.png', text: '「最後離開的人，記得擦黑板。」盒裡只剩一小截白粉筆。字條背面是一局沒下完的井字棋，沒有隱藏密碼。' },
@@ -54,8 +58,8 @@ export const PROPS = {
 };
 const point = (id, x, y, stand) => ({ id, name: (NPCS[id] || PROPS[id]).name, kind: NPCS[id] ? 'npc' : 'flavor', x, y, stand, range: 85, sprite: NPCS[id]?.image || (['old-basketball','old-thermos','spare-cassette'].includes(id) ? PROPS[id].image : null) });
 export const CAMPUS_POINTS = {
-  S01: [point('npc-caretaker',150,450,[200,450]),point('old-basketball',780,470,[730,470]),point('old-thermos',110,290,[160,290]),point('chalk-box',650,145,[650,190]),point('lost-umbrella',145,565,[190,550])],
-  S02: [point('npc-alumnus',320,350,[370,350]),point('lost-notice',190,125,[190,180]),point('old-bench',350,140,[350,185])],
+  S01: [point('return-calendar',565,140,[565,185]),point('photo-left-note',420,490,[420,525]),point('npc-caretaker',150,450,[200,450]),point('old-basketball',780,470,[730,470]),point('old-thermos',110,290,[160,290]),point('chalk-box',650,145,[650,190]),point('lost-umbrella',145,565,[190,550])],
+  S02: [point('absence-list',700,115,[700,170]),point('photo-monitor-note',705,500,[705,540]),point('npc-alumnus',320,350,[370,350]),point('lost-notice',190,125,[190,180]),point('old-bench',350,140,[350,185])],
   S03: [point('npc-broadcast',750,400,[700,400]),point('spare-cassette',660,300,[660,350]),point('power-cord',270,250,[270,300]),point('archive-box',800,160,[800,220])],
   S04: [point('library-ledger',830,160,[830,220]),point('folded-letter',280,450,[325,450]),point('library-notice',500,125,[500,180])]
 };

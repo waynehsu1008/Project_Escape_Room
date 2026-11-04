@@ -119,7 +119,8 @@ modal.addEventListener('close', () => { clearFormFeedback(); keys.clear(); const
 
 function doorOpen(point) {
   if (point.id === 'exit') return state.flags.exitOpen;
-  if (['broadcast-door','library-door'].includes(point.id)) return state.solved.includes('P02');
+  if (point.id === 'broadcast-door') return state.flags.broadcastOpen;
+  if (point.id === 'library-door') return state.solved.includes('P02');
   if (state.scene === 'S01' && point.id === 'class-door') return state.flags.doorOpen;
   return true;
 }
@@ -168,7 +169,7 @@ function render() {
   $('#bell-caption').textContent = state.bells.length ? `第 ${state.bells.length} 聲 ／ 共八聲` : '鐘聲尚未響起';
   $('#bells').setAttribute('aria-label', `八次鐘聲已響起 ${state.bells.length} 次，沒有倒數時間限制`);
   $('#scene-list').innerHTML = Object.entries(WORLD).map(([id, world]) => {
-    const unlocked = id === 'S01' || (id === 'S02' ? state.flags.doorOpen : state.solved.includes('P02'));
+    const unlocked = id === 'S01' || (id === 'S02' ? state.flags.doorOpen : id === 'S03' ? state.flags.broadcastOpen : state.solved.includes('P02'));
     return `<li class="scene-row ${id === state.scene ? 'current' : ''} ${unlocked ? '' : 'locked'}" ${id === state.scene ? 'aria-current="location"' : ''}><img src="${world.image}" alt="" loading="lazy"><div><h3>${world.name}</h3><p>${id === state.scene ? '你在這裡' : unlocked ? '已開放 · 可走回探索' : '通路尚未開放'}</p></div></li>`;
   }).join('');
   $('#inventory-slots').innerHTML = ['I01', 'I02', 'I03', 'I04', 'I05'].map(id => state.inventory.includes(id)
@@ -275,7 +276,7 @@ function showPuzzle(id) {
     toast(result.message, 6500);
     if (isNumber) showLoot('drawer', ['I01', 'I02', 'I03'], '打開的抽屜', '十七號的物品仍在這裡。請逐一拾取，放進背包。');
     else {
-      openModal('把名字拼回來了', `<div class="clue-paper"><strong>林予安</strong><br>三年二班 · 十七號</div><p style="margin-top:18px">${esc(result.message)}</p><p>旁邊的資料櫃已開啟，廣播室的通路也開放了。別忘了取出轉學交接單。</p><div class="modal-actions"><button class="primary-button" id="return-explore">繼續探索 →</button></div>`, '第三聲鐘響');
+      openModal('把名字拼回來了', `<div class="clue-paper"><strong>林予安</strong><br>三年二班 · 十七號</div><p style="margin-top:18px">${esc(result.message)}</p><p>旁邊的資料櫃已開啟，廣播室的門鎖已通電，請用借書卡與日曆解鎖。別忘了取出轉學交接單。</p><div class="modal-actions"><button class="primary-button" id="return-explore">繼續探索 →</button></div>`, '第三聲鐘響');
       $('#return-explore').addEventListener('click', closeModal);
     }
   });
@@ -291,9 +292,10 @@ function showLoot(target, ids, title, intro) {
   }));
 }
 function showSequence() {
-  let order = ['transfer_school', 'return_book', 'read_farewell'];
+  const initialOrder = ['transfer_school', 'return_book', 'read_farewell'];
+  let order = [...initialOrder];
   const options = Object.fromEntries(story.audio.filter(a => a.eventId).map(a => [a.eventId, a]));
-  openModal('被打亂的告別', `<img class="modal-art" src="${art.player}" alt="錄音播放機"><p>三段錄音稿的標籤清楚，順序卻亂了。依照交接單，把最後一天的事件排回來。</p>${state.inventory.includes('I04') ? `<div class="hint-document">${esc(story.evidence.find(e => e.id === 'E05').text)}</div>` : '<div class="hint-document">你還沒有交接單。可以先返回走廊，從資料櫃拾取。</div>'}<div class="sequence-list" id="sequence-list"></div><button class="primary-button" id="check-sequence" type="button">依此順序播放</button><p class="form-feedback" id="form-feedback" role="status"></p>${hintArea('P03')}`, '第三道謎題 · 使用上下按鈕排序');
+  openModal('被打亂的告別', `<img class="modal-art" src="${art.player}" alt="錄音播放機"><p>三段錄音稿的標籤清楚，順序卻亂了。依照交接單，把最後一天的事件排回來。</p>${state.inventory.includes('I04') ? '<button id="read-handoff" class="secondary-button">閱讀轉學交接單</button><div id="handoff-copy" class="hint-document"></div>' : '<div class="hint-document">你還沒有交接單。可以先返回走廊，從資料櫃拾取。</div>'}<div class="sequence-list" id="sequence-list"></div><button class="primary-button" id="check-sequence" type="button">依此順序播放</button><p class="form-feedback" id="form-feedback" role="status"></p>${hintArea('P03')}`, '第三道謎題 · 使用上下按鈕排序');
   function renderSequence() {
     $('#sequence-list').innerHTML = order.map((id, index) => `<div class="sequence-row" data-sequence-id="${id}"><span class="sequence-number">${index + 1}</span><div class="sequence-copy"><strong>${esc(options[id].label)}</strong><p>${esc(options[id].transcript)}</p></div><div class="sequence-buttons"><button type="button" data-index="${index}" data-swap="-1" aria-label="將${esc(options[id].label)}往前移" ${index === 0 ? 'disabled' : ''}>↑</button><button type="button" data-index="${index}" data-swap="1" aria-label="將${esc(options[id].label)}往後移" ${index === 2 ? 'disabled' : ''}>↓</button></div></div>`).join('');
     modal.querySelectorAll('[data-swap]').forEach(button => button.addEventListener('click', () => {
@@ -301,10 +303,25 @@ function showSequence() {
       [order[i], order[j]] = [order[j], order[i]]; renderSequence();
     }));
   }
+  const showHandoff = () => { $('#handoff-copy').textContent = story.evidence.find(e => e.id === 'E05').text; };
+  if (state.flags.handoffRead) showHandoff();
+  $('#read-handoff')?.addEventListener('click', () => {
+    if (act({ type: 'READ_HANDOFF' }, false).ok) showHandoff();
+  });
   renderSequence(); bindHints('P03');
   $('#check-sequence').addEventListener('click', () => {
     const result = act({ type: 'SOLVE', id: 'P03', answer: order }, false);
-    if (!result.ok) { showFormFeedback(result.message); return; }
+    if (!result.ok) {
+      if (result.code === 'unread-handoff') {
+        order = [...initialOrder];
+        renderSequence();
+        if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
+          $('#sequence-list').animate([{transform:'translateX(0)'},{transform:'translateX(-5px)'},{transform:'translateX(5px)'},{transform:'translateX(0)'}], {duration:220});
+        }
+      }
+      showFormFeedback(result.message);
+      return;
+    }
     openModal('這次，聽見了她的告別', `<div class="clue-paper">${esc(story.evidence.find(e => e.id === 'E06').text)}</div><p style="margin-top:18px">完整告別稿已放在設備旁。請走近拾取，帶回教室，讓她的位置留在全班合照中。</p><div class="modal-actions"><button class="primary-button" id="return-explore">去拾取告別稿 →</button></div>`, '第四聲鐘響');
     $('#return-explore').addEventListener('click', closeModal);
   });
@@ -320,8 +337,9 @@ function showBag() {
 }
 function showItem(id) {
   if (!state.inventory.includes(id)) return;
+  if (id === 'I04' && !state.flags.handoffRead && !state.ended) act({ type: 'READ_HANDOFF' }, false);
   const item = story.items.find(i => i.id === id), used = state.used.includes(id);
-  const documentText = id === 'I01' ? '借書卡 · 1998 年三年二班\n座號：17\n姓名：林□安\n姓名的中間一字已磨損。' : id === 'I04' ? story.evidence.find(e => e.id === 'E05').text : id === 'I05' ? story.evidence.find(e => e.id === 'E06').text : item.description;
+  const documentText = id === 'I01' ? '借書卡 · 1998 年三年二班\n座號：17\n姓名：林□安\n姓名的中間一字已磨損。\n還書章：1998/05/20，第 8 節。' : id === 'I04' ? story.evidence.find(e => e.id === 'E05').text : id === 'I05' ? story.evidence.find(e => e.id === 'E06').text : item.description;
   openModal(item.name, `<div class="bag-detail"><img src="${itemArt[id]}" alt="${esc(item.name)}"><div><h3>${esc(item.name)}</h3><p>${esc(item.description)}</p><p class="item-state">${used ? (id === 'I03' ? '已使用，內門保持開放。' : '已放置，仍可查看這份紀錄。') : '好好保存在你的背包裡。'}</p></div></div><div class="clue-paper" style="margin-top:20px">${esc(documentText)}</div><div class="modal-actions">${['I02', 'I03', 'I05'].includes(id) && !used ? '<button class="primary-button" id="select-item" type="button">拿起這件道具</button>' : ''}<button class="secondary-button" id="back-to-bag" type="button">返回背包</button></div>`, '背包中的物品');
   $('#back-to-bag').addEventListener('click', showBag);
   $('#select-item')?.addEventListener('click', () => { selectedItem = id; render(); modal.close(); toast(`已拿起${itemLabels[id]}。點擊場景中的使用目標。`); });
@@ -341,7 +359,22 @@ function showUseTarget(id) {
     } else toast(result.message);
   });
 }
+function showPhotoGrid() {
+  selectedItem = null;
+  render();
+  const slots = ['同學', '同學', '風紀股長', '16 號', '候選空位', '候選空位', '同學', '候選空位', '同學'];
+  openModal('推理合照站位', '<p>比對教室與走廊的兩張字條，選出 17 號的位置。</p><div class="photo-grid">' +
+    slots.map((label, slot) => `<button type="button" data-slot="${slot}" ${label === '候選空位' ? '' : 'disabled'}><span class="photo-silhouette" aria-hidden="true"></span><span>${label}</span><small>第 ${Math.floor(slot / 3) + 1} 排第 ${slot % 3 + 1} 格</small></button>`).join('') +
+    '</div><p id="form-feedback" class="form-feedback" role="status"></p>', '全班合照局部 · 九宮格');
+  modal.querySelectorAll('[data-slot]:enabled').forEach(button => button.addEventListener('click', () => {
+    const result = act({ type: 'USE', id: 'I02', target: 'photo', slot: Number(button.dataset.slot) }, false);
+    if (!result.ok) { showFormFeedback(result.message); return; }
+    closeModal();
+    toast(result.message);
+  }));
+}
 function useItem(id, target) {
+  if (id === 'I02' && target === 'photo' && state.solved.includes('P03') && state.inventory.includes('I05') && !state.flags.photoPlaced) return showPhotoGrid();
   const result = act({ type: 'USE', id, target }, false);
   if (!result.ok) { toast(result.message); return; }
   selectedItem = null; render(); toast(result.message, 6500);
@@ -351,7 +384,19 @@ function bindUseButtons(target) { modal.querySelectorAll('[data-use-item]').forE
 function showDoor(id) {
   const point = getPoint(state.scene, id), open = doorOpen(point);
   if (open) { walkToPoint(id, true); return; }
-  let message = id === 'exit' ? '出口像被一段未結束的點名鎖住。不是這把內門鑰匙能打開的門。' : id === 'library-door' ? '圖書館的校史資料還在整理，請先在紀念名冊確認十七號的姓名。' : id === 'broadcast-door' ? '廣播室門旁寫著：「請先把紀念名冊中的十七號補完整。」' : '內門鎖住了。鑰匙應該和待歸還物品放在一起。';
+  if (id === 'broadcast-door' && state.solved.includes('P02')) {
+    openModal('借閱章密碼鎖', '<p>比對借書卡還書日與舊教室日曆，輸入星期數字和兩位節次。</p><form class="puzzle-form" id="broadcast-form"><input id="answer-input" aria-label="廣播室三位密碼" inputmode="numeric" maxlength="3" autocomplete="off"><button class="primary-button" type="submit">解鎖</button></form><p id="form-feedback" class="form-feedback" role="status"></p>', '廣播室門口');
+    $('#broadcast-form').addEventListener('submit', event => {
+      event.preventDefault();
+      const input = $('#answer-input');
+      const result = act({ type: 'UNLOCK_BROADCAST', answer: input.value }, false);
+      if (!result.ok) { input.value = ''; showFormFeedback(result.message); input.focus(); return; }
+      closeModal();
+      toast(result.message);
+    });
+    return;
+  }
+  let message = id === 'exit'  ? '出口像被一段未結束的點名鎖住。不是這把內門鑰匙能打開的門。' : id === 'library-door' ? '圖書館的校史資料還在整理，請先在紀念名冊確認十七號的姓名。' : id === 'broadcast-door' ? '廣播室門旁寫著：「請先把紀念名冊中的十七號補完整。」' : '內門鎖住了。鑰匙應該和待歸還物品放在一起。';
   openModal(point.name, `<img class="modal-art" src="${art.door}" alt="鎖住的門"><p>${message}</p>${id === 'class-door' && state.scene === 'S01' && state.inventory.includes('I03') ? '<div class="modal-actions"><button class="primary-button" data-use-item="I03">使用鑰匙開門</button></div>' : '<p class="opening-note">可以先回頭探索。必要道具不會因為用錯位置而消失。</p>'}`, '通路尚未開啟');
   bindUseButtons(id);
 }
@@ -429,7 +474,7 @@ function travelIfAtDoor(timestamp) {
   const point = WORLD[state.scene].points.find(p => p.kind === 'door' && distance(state.player, p) < 26);
   if (!point || (state.ended && point.id === 'exit')) return false;
   if (!doorOpen(point)) {
-    if (timestamp - blockedDoorAt > 3500) { toast(point.id === 'exit' ? '最後的點名還沒結束，校舍出口尚未開放。' : ['broadcast-door','library-door'].includes(point.id) ? '先把紀念名冊的姓名補回來。' : '內門鎖著。先從背包使用鑰匙。'); blockedDoorAt = timestamp; }
+    if (timestamp - blockedDoorAt > 3500) { toast(point.id === 'exit' ? '最後的點名還沒結束，校舍出口尚未開放。' : point.id === 'broadcast-door' && state.solved.includes('P02') ? '按 E 查看借閱章密碼鎖。' : ['broadcast-door','library-door'].includes(point.id) ? '先把紀念名冊的姓名補回來。' : '內門鎖著。先從背包使用鑰匙。'); blockedDoorAt = timestamp; }
     path = []; intent = null; $('#destination').hidden = true; return false;
   }
   const wasEnded = state.ended;

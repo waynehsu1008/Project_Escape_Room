@@ -7,7 +7,7 @@ export function createGame() {
   return {
     schema: 1, started: false, scene: 'S01', player: { x: 500, y: 530, facing: 'up' },
     solved: [], inventory: [], used: [], bells: [], clues: [], hints: {}, discovered: [],
-    flags: { doorOpen: false, returned: false, photoPlaced: false, scriptPlaced: false, exitOpen: false },
+    flags: { doorOpen: false, broadcastOpen: false, handoffRead: false, returned: false, photoPlaced: false, scriptPlaced: false, exitOpen: false },
     ended: false, muted: true, elapsed: 0
   };
 }
@@ -18,7 +18,7 @@ export function canInteract(state, target) {
 const bell = (state, n) => { if (!state.bells.includes(n)) state.bells.push(n); };
 const add = (list, id) => { if (!list.includes(id)) list.push(id); };
 export function execute(original, action, story) {
-  const fail = message => ({ state: original, ok: false, message });
+  const fail = (message, code) => ({ state: original, ok: false, message, ...(code ? { code } : {}) });
   if (!action || typeof action.type !== 'string') return fail('無法辨識這個操作。');
   const state = structuredClone(original);
   const done = message => ({ state, ok: true, message });
@@ -28,6 +28,17 @@ export function execute(original, action, story) {
   }
   if (!state.started) return fail('請先開始遊戲。');
   if (state.ended && !['READ', 'DISCOVER', 'TRAVEL'].includes(action.type)) return fail('已通關，可以繼續探索與閱讀線索。');
+  if (action.type === 'UNLOCK_BROADCAST') {
+    if (state.scene !== 'S02' || !state.solved.includes('P02') || !canInteract(state, 'broadcast-door')) return fail('請先補回姓名，再走近廣播室門口。');
+    if (typeof action.answer !== 'string' || action.answer.trim() !== story.broadcastCode) return fail('紅燈亮起。請再比對借書卡與教室日曆。');
+    state.flags.broadcastOpen = true;
+    return done('綠燈亮起，廣播室已解鎖。');
+  }
+  if (action.type === 'READ_HANDOFF') {
+    if (!state.inventory.includes('I04')) return fail('請先拾取轉學交接單。');
+    state.flags.handoffRead = true;
+    return done('已閱讀轉學交接單。');
+  }
   if (action.type === 'DISCOVER') {
     const key = `${state.scene}:${action.target}`;
     if (!canInteract(state,action.target) || !EXPLORABLE.some(p=>p.key===key)) return fail('請走近可探索的物件。');
@@ -52,6 +63,7 @@ export function execute(original, action, story) {
     if (!puzzle.requiresPuzzles.every(id => state.solved.includes(id))) return fail('前面的線索還沒有完整。');
     if (!puzzle.requiredItemIds.every(id => state.inventory.includes(id))) return fail(action.id === 'P02' ? '請回教室取出借書卡，再比對班級與座號。' : '請先從走廊資料櫃拾取轉學交接單。');
     if (action.id === 'P02' && !state.flags.doorOpen) return fail('請先用鑰匙打開內門。');
+    if (action.id === 'P03' && !state.flags.handoffRead) return fail('雜訊打散了錄音稿。先讀轉學交接單，再重新排列。', 'unread-handoff');
     const correct = Array.isArray(puzzle.answer)
       ? Array.isArray(action.answer) && action.answer.length === puzzle.answer.length && action.answer.every((v, i) => v === puzzle.answer[i])
       : typeof action.answer === 'string' && action.answer.trim() === puzzle.answer;
@@ -75,6 +87,7 @@ export function execute(original, action, story) {
     }
     if (action.id === 'I02' && action.target === 'photo' && state.scene === 'S01') {
       if (!state.solved.includes('P03') || !state.inventory.includes('I05')) return fail('先找回完整告別稿，確認她想留下的話，再完成最後點名。');
+      if (action.slot !== story.photoSlot) return fail('位置不對。照片已留在背包。');
       state.flags.returned = true; bell(state, 5);
       state.flags.photoPlaced = true; add(state.used, 'I02'); bell(state, 6);
       return done('照片回到合照的空白處。接著，把完整告別稿放上講台稿架。');
@@ -97,6 +110,7 @@ export function execute(original, action, story) {
     if (!p || p.kind !== 'door' || distance(state.player, p) > 30) return fail('請親自走到門口。');
     if (state.scene === 'S01' && !state.flags.doorOpen) return fail('內門鎖住了。需要走廊資料區鑰匙。');
     if (['broadcast-door','library-door'].includes(p.id) && !state.solved.includes('P02')) return fail('先把紀念名冊中的姓名補完整，廣播室與圖書館才會開放。');
+    if (p.id === 'broadcast-door' && !state.flags.broadcastOpen) return fail('廣播室的借閱章密碼鎖尚未解開。');
     if (p.to === 'END01') {
       if (!state.flags.exitOpen) return fail('校舍出口還沒開。最後的點名尚未結束。');
       state.ended = true; return done('你走出了校舍。離開教室的人，不該因此被擦掉。');
@@ -127,6 +141,10 @@ export function restore(raw) {
     if (!data || data.schema !== 1 || !WORLD[data.scene] || typeof data.started !== 'boolean' || typeof data.ended !== 'boolean' || typeof data.muted !== 'boolean' || !Number.isFinite(data.elapsed) || data.elapsed < 0) return null;
     const lists = { solved: ['P01', 'P02', 'P03', 'P04'], inventory: ['I01', 'I02', 'I03', 'I04', 'I05'], used: ['I02', 'I03', 'I05'], clues: ['blackboard', 'roster', 'science', 'recordings', 'photo', 'lectern', ...Object.values(WORLD).flatMap(w => w.points.filter(p => ['npc','flavor'].includes(p.kind)).map(p => p.id))], bells: [1, 2, 3, 4, 5, 6, 7, 8] };
     for (const [key, allowed] of Object.entries(lists)) if (!Array.isArray(data[key]) || data[key].some(id => !allowed.includes(id)) || new Set(data[key]).size !== data[key].length) return null;
+    if (data.flags && data.flags.broadcastOpen === undefined && data.flags.handoffRead === undefined) {
+      data.flags.broadcastOpen = data.scene === 'S03' || data.solved.includes('P03');
+      data.flags.handoffRead = data.solved.includes('P03');
+    }
     if (!data.flags || Object.keys(base.flags).some(k => typeof data.flags[k] !== 'boolean')) return null;
     if (!data.player || !Number.isFinite(data.player.x) || !Number.isFinite(data.player.y) || !['up', 'down', 'left', 'right'].includes(data.player.facing)) return null;
     if (!data.hints || typeof data.hints !== 'object' || Array.isArray(data.hints) || Object.entries(data.hints).some(([key, v]) => !lists.solved.includes(key) || !Number.isInteger(v) || v < 0 || v > 3)) return null;
@@ -134,6 +152,7 @@ export function restore(raw) {
     if ((solved('P02') && (!solved('P01') || !f.doorOpen || !has('I01'))) || (solved('P03') && (!solved('P02') || !has('I04')))) return null;
     if (data.inventory.some(id => !solved(['I04', 'I05'].includes(id) ? (id === 'I04' ? 'P02' : 'P03') : 'P01'))) return null;
     if ((f.doorOpen && !has('I03')) || (data.scene !== 'S01' && !f.doorOpen) || (['S03','S04'].includes(data.scene) && !solved('P02'))) return null;
+    if ((f.broadcastOpen && !solved('P02')) || (data.scene === 'S03' && !f.broadcastOpen) || (f.handoffRead && !has('I04')) || (solved('P03') && (!f.broadcastOpen || !f.handoffRead))) return null;
     if ((f.returned && !solved('P03')) || (f.photoPlaced && (!f.returned || !has('I02') || !has('I05'))) || (f.scriptPlaced && !f.photoPlaced) || (f.exitOpen && (!f.scriptPlaced || !solved('P04'))) || (solved('P04') !== f.exitOpen) || (data.ended && !f.exitOpen)) return null;
     const expectedUsed = [f.photoPlaced && 'I02', f.doorOpen && 'I03', f.scriptPlaced && 'I05'].filter(Boolean).sort();
     if (JSON.stringify([...data.used].sort()) !== JSON.stringify(expectedUsed)) return null;
@@ -154,7 +173,7 @@ export function getObjective(state) {
   if (state.flags.scriptPlaced) return ['廣播正在等待你的回答。', '靠近講台，代她回應最後一次點名。'];
   if (state.flags.photoPlaced) return ['她的位置已經回到合照。', '將完整告別稿放上講台稿架。'];
   if (state.solved.includes('P03')) return [state.inventory.includes('I05') ? '把她的位置留在班級裡。' : '告別終於完整，別把它留下。', state.inventory.includes('I05') ? '帶著照片與告別稿回教室，先補上合照。' : '靠近設備旁的稿件，拾取完整告別稿。'];
-  if (state.solved.includes('P02')) return ['有些話，還沒有被聽見。', state.inventory.includes('I04') ? '前往廣播室，依交接單還原當天順序。' : '從走廊資料櫃取出轉學交接單。'];
+  if (state.solved.includes('P02')) return ['有些話，還沒有被聽見。', state.inventory.includes('I04') ? state.flags.broadcastOpen ? '前往廣播室，閱讀交接單並還原當天順序。' : '比對借書卡還書日與教室日曆，解開廣播室門鎖。' : '從走廊資料櫃取出轉學交接單。'];
   if (state.flags.doorOpen) return ['有座號，卻沒有名字。', '重讀借書卡，比對走廊科展名單。'];
   if (state.solved.includes('P01')) return ['抽屜裡的物品還在等你。', '逐一拾取道具，再對內門使用鑰匙。'];
   return ['留在教室的名單，少了誰？', '查看班級資料，找出缺少的座號。'];

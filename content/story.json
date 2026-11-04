@@ -25,6 +25,8 @@
     {"evidenceId": "E03", "classId": "1998-3-2", "number": 17, "mask": "林□安"},
     {"evidenceId": "E04", "classId": "1998-3-2", "number": 17, "mask": "□予□"}
   ],
+  "broadcastCode": "308",
+  "photoSlot": 4,
   "departureOrder": ["return_book", "read_farewell", "transfer_school"],
   "initialSceneIds": ["S01"],
   "initialItemIds": [],
@@ -54,11 +56,11 @@
     },
     {
       "id": "E03", "sceneId": "S01", "requiresPuzzles": ["P01"],
-      "text": "借書卡：1998 年三年二班／17 號／林□安。姓名中間一字磨損，借閱班級與座號清楚可讀。"
+      "text": "借書卡：1998 年三年二班／17 號／林□安。姓名中間一字磨損。還書章：1998/05/20，第 8 節。"
     },
     {
       "id": "E04", "sceneId": "S02", "requiresPuzzles": ["P01"],
-      "text": "科展名單：1998 年三年二班／17 號／□予□。第一與第三字被膠帶遮住，中間一字仍可辨識。"
+      "text": "科展名單：1998 年三年二班／17 號／□予□。展出日期：1998/05/21。第一與第三字被膠帶遮住，中間一字仍可辨識。"
     },
     {
       "id": "E05", "sceneId": "S02", "requiresPuzzles": ["P02"],
@@ -70,7 +72,7 @@
     },
     {
       "id": "E07", "sceneId": "S01", "requiresPuzzles": [],
-      "text": "班級紀念合照留有一格明顯的空白相框，尺寸和一張個人照相同；下方題字是『曾在這一班的我們』。"
+      "text": "班級紀念合照的局部是九宮格。比對教室與走廊的兩張字條，從候選空位找出十七號的站位；下方題字是『曾在這一班的我們』。"
     }
   ],
   "items": [
@@ -105,7 +107,7 @@
       "rewardItemIds": ["I04"], "unlockSceneIds": ["S03", "S04"],
       "verifyIds": ["V-A03", "V-A05", "V-A07"],
       "revealText": "林予安。轉學交接資料顯示，她在畢業前去了另一所學校。她沒有消失，只是沒有被寫進這份畢業名單。",
-      "failureText": "請確認兩份資料上的班級與座號，再比對姓名。",
+      "failureText": "請確認日期與身分，再比對借書卡與科展資料上的班級、座號和姓名。",
       "hints": [
         "同一個人可能在不同活動中留下紀錄。",
         "找出和借書卡相同班級、相同座號的那一列。",
