@@ -7,7 +7,7 @@ export function createGame() {
   return {
     schema: 1, started: false, scene: 'S01', player: { x: 500, y: 530, facing: 'up' },
     solved: [], inventory: [], used: [], bells: [], clues: [], hints: {}, discovered: [],
-    flags: { doorOpen: false, broadcastOpen: false, handoffRead: false, returned: false, photoPlaced: false, scriptPlaced: false, exitOpen: false },
+    flags: { doorOpen: false, broadcastOpen: false, handoffRead: false, classroomDark: false, calendarClueRead: false, mirrorClueRead: false, poemRead: false, positionClueRead: false, noticeCombined: false, playerPowered: false, returned: false, photoPlaced: false, scriptPlaced: false, exitOpen: false },
     ended: false, muted: true, elapsed: 0
   };
 }
@@ -30,9 +30,27 @@ export function execute(original, action, story) {
   if (state.ended && !['READ', 'DISCOVER', 'TRAVEL'].includes(action.type)) return fail('已通關，可以繼續探索與閱讀線索。');
   if (action.type === 'UNLOCK_BROADCAST') {
     if (state.scene !== 'S02' || !state.solved.includes('P02') || !canInteract(state, 'broadcast-door')) return fail('請先補回姓名，再走近廣播室門口。');
+    if (!state.flags.calendarClueRead) return fail('日期線索還沒確認。回舊教室關燈，用科展螢光透鏡照黑板。');
     if (typeof action.answer !== 'string' || action.answer.trim() !== story.broadcastCode) return fail('紅燈亮起。請再比對借書卡與教室日曆。');
     state.flags.broadcastOpen = true;
     return done('綠燈亮起，廣播室已解鎖。');
+  }
+  if (action.type === 'TOGGLE_LIGHTS') {
+    if (state.scene !== 'S01' || !canInteract(state, 'light-switch')) return fail('請走近教室電燈開關。');
+    state.flags.classroomDark = !state.flags.classroomDark;
+    return done(state.flags.classroomDark ? '教室燈光熄滅了。' : '教室燈光重新亮起。');
+  }
+  if (action.type === 'COMBINE_NOTICE') {
+    if (!state.inventory.includes('I01') || !state.inventory.includes('I08')) return fail('需要同時持有 17 號借書卡與打孔逾期通知。');
+    state.flags.noticeCombined = true;
+    return done('孔洞對上借書卡的座號與節次：17、08。播放設備啟動碼是 1708。');
+  }
+  if (action.type === 'UNLOCK_PLAYER') {
+    if (state.scene !== 'S03' || !state.solved.includes('P02') || !canInteract(state, 'player')) return fail('請走近廣播室的播放設備。');
+    if (!state.flags.noticeCombined) return fail('先在背包中把打孔通知與 17 號借書卡疊合。');
+    if (typeof action.answer !== 'string' || action.answer.trim() !== story.playerActivationCode) return fail('設備顯示紅燈。請重新比對通知單孔洞露出的數字。');
+    state.flags.playerPowered = true;
+    return done('播放設備亮起綠燈，可以整理錄音稿了。');
   }
   if (action.type === 'READ_HANDOFF') {
     if (!state.inventory.includes('I04')) return fail('請先拾取轉學交接單。');
@@ -59,7 +77,19 @@ export function execute(original, action, story) {
   if (action.type === 'READ') {
     if (!canInteract(state, action.target)) return fail('請先走到物件附近。');
     if (!['blackboard', 'roster', 'science', 'recordings', 'photo', 'lectern'].includes(action.target) && !['npc','flavor'].includes(getPoint(state.scene, action.target)?.kind)) return fail('這裡沒有可讀取的文件。');
+    if (action.target === 'acrostic-poem') state.flags.poemRead = true;
+    if (action.target === 'position-note') {
+      if (!state.flags.poemRead) return fail('還不知道詩句指向哪裡。');
+      state.flags.positionClueRead = true;
+    }
     add(state.clues, action.target); return done('已記入探索筆記。');
+  }
+  if (action.type === 'INSPECT_LECTERN') {
+    if (state.scene !== 'S01' || !canInteract(state, 'lectern')) return fail('請走到教室講台附近。');
+    if (!state.flags.poemRead) return fail('還沒有讀到圖書館的藏頭詩。');
+    state.flags.positionClueRead = true;
+    add(state.clues, 'position-note');
+    return done('講台下找到一張九宮格站位便箋，已記入探索筆記。');
   }
   if (action.type === 'SOLVE') {
     const target = { P01: 'drawer', P02: 'register', P03: 'player' }[action.id];
@@ -69,6 +99,7 @@ export function execute(original, action, story) {
     if (!puzzle.requiresPuzzles.every(id => state.solved.includes(id))) return fail('前面的線索還沒有完整。');
     if (!puzzle.requiredItemIds.every(id => state.inventory.includes(id))) return fail(action.id === 'P02' ? '請回教室取出借書卡，再比對班級與座號。' : '請先從走廊資料櫃拾取轉學交接單。');
     if (action.id === 'P02' && !state.flags.doorOpen) return fail('請先用鑰匙打開內門。');
+    if (action.id === 'P03' && !state.flags.playerPowered) return fail('播放設備還沒通電。先輸入設備碼 1708。');
     if (action.id === 'P03' && !state.flags.handoffRead) return fail('雜訊打散了錄音稿。先讀轉學交接單，再重新排列。', 'unread-handoff');
     const correct = Array.isArray(puzzle.answer)
       ? Array.isArray(action.answer) && action.answer.length === puzzle.answer.length && action.answer.every((v, i) => v === puzzle.answer[i])
@@ -78,7 +109,7 @@ export function execute(original, action, story) {
     return done(puzzle.revealText);
   }
   if (action.type === 'PICKUP') {
-    const config = { I01: ['drawer', 'P01'], I02: ['drawer', 'P01'], I03: ['drawer', 'P01'], I04: ['cabinet', 'P02'], I05: ['script', 'P03'] }[action.id];
+    const config = { I01: ['drawer', 'P01'], I02: ['drawer', 'P01'], I03: ['drawer', 'P01'], I04: ['cabinet', 'P02'], I05: ['script', 'P03'], I06: ['lens-cache', 'P02'], I07: ['tracing-paper', 'P02'], I08: ['overdue-notice', 'P02'] }[action.id];
     if (!config || !canInteract(state, config[0])) return fail('請走到道具所在的位置。');
     if (!state.solved.includes(config[1])) return fail('機關還沒打開。');
     if (state.inventory.includes(action.id)) return done('這件道具已經在背包裡。');
@@ -91,9 +122,19 @@ export function execute(original, action, story) {
     if (action.id === 'I03' && action.target === 'class-door' && state.scene === 'S01') {
       state.flags.doorOpen = true; add(state.used, 'I03'); return done('鑰匙轉動了。內門已開，走到門口就能進入走廊。');
     }
+    if (action.id === 'I06' && action.target === 'blackboard' && state.scene === 'S01') {
+      if (!state.flags.classroomDark) return fail('螢光字在燈光下看不清楚。先關掉教室電燈。');
+      state.flags.calendarClueRead = true; add(state.clues, 'blackboard');
+      return done('螢光字浮現：最後還書日是 1998/05/20（三），第 8 節。');
+    }
+    if (action.id === 'I07' && action.target === 'classroom-window' && state.scene === 'S01') {
+      state.flags.mirrorClueRead = true; add(state.clues, 'classroom-window');
+      return done('月光透過描圖紙，顯出反字：「台上與台下，左右相反」。');
+    }
     if (action.id === 'I02' && action.target === 'photo' && state.scene === 'S01') {
       if (!state.solved.includes('P03') || !state.inventory.includes('I05')) return fail('先找回完整告別稿，確認她想留下的話，再完成最後點名。');
-      if (action.slot !== story.photoSlot) return fail('位置不對。照片已留在背包。');
+      if (!state.flags.positionClueRead || !state.flags.mirrorClueRead) return fail('先讀圖書館的藏頭詩，找到講台下的站位便箋，再到窗邊翻讀描圖紙。');
+      if (action.slot !== story.photoSlot) return fail('位置不對。從台下看照片時，左右和台上拍照的方向相反。照片已留在背包。');
       state.flags.returned = true; bell(state, 5);
       state.flags.photoPlaced = true; add(state.used, 'I02'); bell(state, 6);
       return done('照片回到合照的空白處。接著，把完整告別稿放上講台稿架。');
@@ -145,21 +186,30 @@ export function restore(raw) {
   try {
     const data = JSON.parse(raw), base = createGame();
     if (!data || data.schema !== 1 || !WORLD[data.scene] || typeof data.started !== 'boolean' || typeof data.ended !== 'boolean' || typeof data.muted !== 'boolean' || !Number.isFinite(data.elapsed) || data.elapsed < 0) return null;
-    const lists = { solved: ['P01', 'P02', 'P03', 'P04'], inventory: ['I01', 'I02', 'I03', 'I04', 'I05'], used: ['I02', 'I03', 'I05'], clues: ['blackboard', 'roster', 'science', 'recordings', 'photo', 'lectern', ...Object.values(WORLD).flatMap(w => w.points.filter(p => ['npc','flavor'].includes(p.kind)).map(p => p.id))], bells: [1, 2, 3, 4, 5, 6, 7, 8] };
+    const lists = { solved: ['P01', 'P02', 'P03', 'P04'], inventory: ['I01', 'I02', 'I03', 'I04', 'I05', 'I06', 'I07', 'I08'], used: ['I02', 'I03', 'I05'], clues: ['blackboard', 'roster', 'science', 'recordings', 'photo', 'lectern', 'position-note', ...Object.values(WORLD).flatMap(w => w.points.filter(p => ['npc','flavor'].includes(p.kind)).map(p => p.id))], bells: [1, 2, 3, 4, 5, 6, 7, 8] };
     for (const [key, allowed] of Object.entries(lists)) if (!Array.isArray(data[key]) || data[key].some(id => !allowed.includes(id)) || new Set(data[key]).size !== data[key].length) return null;
-    if (data.flags && data.flags.broadcastOpen === undefined && data.flags.handoffRead === undefined) {
+    if (!data.flags || typeof data.flags !== 'object' || Array.isArray(data.flags)) return null;
+    if (data.flags.broadcastOpen === undefined && data.flags.handoffRead === undefined) {
       data.flags.broadcastOpen = data.scene === 'S03' || data.solved.includes('P03');
       data.flags.handoffRead = data.solved.includes('P03');
     }
+    const oldFlags = { ...data.flags };
+    data.flags = { ...base.flags, ...data.flags };
+    if (oldFlags.calendarClueRead === undefined) data.flags.calendarClueRead = Boolean(oldFlags.broadcastOpen || data.scene === 'S03' || data.solved.includes('P03'));
+    if (oldFlags.noticeCombined === undefined) data.flags.noticeCombined = data.scene === 'S03' || data.solved.includes('P03');
+    if (oldFlags.playerPowered === undefined) data.flags.playerPowered = data.scene === 'S03' || data.solved.includes('P03');
+    if (oldFlags.poemRead === undefined && (oldFlags.photoPlaced || oldFlags.scriptPlaced || data.solved.includes('P04'))) data.flags.poemRead = true;
+    if (oldFlags.positionClueRead === undefined && (oldFlags.photoPlaced || oldFlags.scriptPlaced || data.solved.includes('P04'))) data.flags.positionClueRead = true;
+    if (oldFlags.mirrorClueRead === undefined && (oldFlags.photoPlaced || oldFlags.scriptPlaced || data.solved.includes('P04'))) data.flags.mirrorClueRead = true;
     if (!data.flags || Object.keys(base.flags).some(k => typeof data.flags[k] !== 'boolean')) return null;
     if (!data.player || !Number.isFinite(data.player.x) || !Number.isFinite(data.player.y) || !['up', 'down', 'left', 'right'].includes(data.player.facing)) return null;
-    if (!data.hints || typeof data.hints !== 'object' || Array.isArray(data.hints) || Object.entries(data.hints).some(([key, v]) => !lists.solved.includes(key) || !Number.isInteger(v) || v < 0 || v > 3)) return null;
+    if (!data.hints || typeof data.hints !== 'object' || Array.isArray(data.hints) || Object.entries(data.hints).some(([key, v]) => ![...lists.solved, 'broadcast-lock'].includes(key) || !Number.isInteger(v) || v < 0 || v > 3)) return null;
     const has = id => data.inventory.includes(id), solved = id => data.solved.includes(id), f = data.flags;
     if ((solved('P02') && (!solved('P01') || !f.doorOpen || !has('I01'))) || (solved('P03') && (!solved('P02') || !has('I04')))) return null;
-    if (data.inventory.some(id => !solved(['I04', 'I05'].includes(id) ? (id === 'I04' ? 'P02' : 'P03') : 'P01'))) return null;
+    if (data.inventory.some(id => !solved(['I04', 'I06', 'I07', 'I08'].includes(id) ? 'P02' : id === 'I05' ? 'P03' : 'P01'))) return null;
     if ((f.doorOpen && !has('I03')) || (data.scene !== 'S01' && !f.doorOpen) || (['S03','S04'].includes(data.scene) && !solved('P02'))) return null;
-    if ((f.broadcastOpen && !solved('P02')) || (data.scene === 'S03' && !f.broadcastOpen) || (f.handoffRead && !has('I04')) || (solved('P03') && (!f.broadcastOpen || !f.handoffRead))) return null;
-    if ((f.returned && !solved('P03')) || (f.photoPlaced && (!f.returned || !has('I02') || !has('I05'))) || (f.scriptPlaced && !f.photoPlaced) || (f.exitOpen && (!f.scriptPlaced || !solved('P04'))) || (solved('P04') !== f.exitOpen) || (data.ended && !f.exitOpen)) return null;
+    if ((f.broadcastOpen && (!solved('P02') || !f.calendarClueRead)) || (data.scene === 'S03' && !f.broadcastOpen) || (f.poemRead && !solved('P02')) || (f.positionClueRead && !f.poemRead) || (f.playerPowered && !f.noticeCombined) || (f.handoffRead && !has('I04')) || (solved('P03') && (!f.broadcastOpen || !f.playerPowered || !f.handoffRead))) return null;
+    if ((f.returned && !solved('P03')) || (f.photoPlaced && (!f.returned || !has('I02') || !has('I05') || !f.positionClueRead || !f.mirrorClueRead)) || (f.scriptPlaced && !f.photoPlaced) || (f.exitOpen && (!f.scriptPlaced || !solved('P04'))) || (solved('P04') !== f.exitOpen) || (data.ended && !f.exitOpen)) return null;
     const expectedUsed = [f.photoPlaced && 'I02', f.doorOpen && 'I03', f.scriptPlaced && 'I05'].filter(Boolean).sort();
     if (JSON.stringify([...data.used].sort()) !== JSON.stringify(expectedUsed)) return null;
     const expectedBells = [data.started && 1, solved('P01') && 2, solved('P02') && 3, solved('P03') && 4, f.returned && 5, f.photoPlaced && 6, f.scriptPlaced && 7, f.exitOpen && 8].filter(Boolean);
@@ -178,8 +228,14 @@ export function getObjective(state) {
   if (state.flags.exitOpen) return ['最後一聲，終於有了回應。', '經過走廊，親自走出校舍出口。'];
   if (state.flags.scriptPlaced) return ['廣播正在等待你的回答。', '靠近講台，代她回應最後一次點名。'];
   if (state.flags.photoPlaced) return ['她的位置已經回到合照。', '將完整告別稿放上講台稿架。'];
-  if (state.solved.includes('P03')) return [state.inventory.includes('I05') ? '把她的位置留在班級裡。' : '告別終於完整，別把它留下。', state.inventory.includes('I05') ? '帶著照片與告別稿回教室，先補上合照。' : '靠近設備旁的稿件，拾取完整告別稿。'];
-  if (state.solved.includes('P02')) return ['有些話，還沒有被聽見。', state.inventory.includes('I04') ? state.flags.broadcastOpen ? '前往廣播室，閱讀交接單並還原當天順序。' : '比對借書卡還書日與教室日曆，解開廣播室門鎖。' : '從走廊資料櫃取出轉學交接單。'];
+  if (state.solved.includes('P03')) return [state.inventory.includes('I05') ? '把她的位置留在班級裡。' : '告別終於完整，別把它留下。', !state.flags.poemRead ? '前往圖書館讀贈書短詩，依藏頭指引找回合照站位便箋。' : !state.flags.positionClueRead ? '回到舊教室，查看講台下的站位便箋。' : !state.flags.mirrorClueRead ? '從走廊取出描圖紙，在舊教室窗邊翻讀鏡像字。' : state.inventory.includes('I05') ? '帶著照片與告別稿回教室，依台上／台下視角補上合照。' : '靠近設備旁的稿件，拾取完整告別稿。'];
+  if (state.solved.includes('P02')) {
+    if (!state.flags.calendarClueRead) return ['找出被藏起來的日期。', '在走廊取科展螢光透鏡，回教室關燈後照向黑板。'];
+    if (!state.flags.broadcastOpen) return ['有些話，還沒有被聽見。', '比對借書卡與日曆，輸入星期數字和節次，解開 308 門鎖。'];
+    if (state.scene === 'S03' && !state.flags.noticeCombined) return ['讓老設備重新發聲。', '前往圖書館拾取打孔通知，在背包與 17 號借書卡疊合。'];
+    if (state.scene === 'S03' && !state.flags.playerPowered) return ['讓老設備重新發聲。', '在播放設備輸入通知單與借書卡拼出的啟動碼 1708。'];
+    return ['有些話，還沒有被聽見。', state.inventory.includes('I04') ? state.flags.broadcastOpen ? '閱讀交接單，再還原當天順序。' : '比對借書卡還書日與教室日曆，解開廣播室門鎖。' : '從走廊資料櫃取出轉學交接單。'];
+  }
   if (state.flags.doorOpen) return ['有座號，卻沒有名字。', '重讀借書卡，比對走廊科展名單。'];
   if (state.solved.includes('P01')) return ['抽屜裡的物品還在等你。', '逐一拾取道具，再對內門使用鑰匙。'];
   return ['留在教室的名單，少了誰？', '查看班級資料，找出缺少的座號。'];

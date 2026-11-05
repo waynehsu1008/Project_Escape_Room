@@ -39,9 +39,20 @@ function reachThird() {
   let state = perform(portal(collectFirst(), 'class-door'), { type: 'TRAVEL', target: 'class-door' }).state;
   state = perform(near(state, 'register'), { type: 'SOLVE', id: 'P02', answer: '林予安' }).state;
   state = perform(near(state, 'cabinet'), { type: 'PICKUP', id: 'I04' }).state;
+  state = perform(near(state, 'lens-cache'), { type: 'PICKUP', id: 'I06' }).state;
+  state = perform(near(state, 'tracing-paper'), { type: 'PICKUP', id: 'I07' }).state;
+  state = perform(portal(state, 'class-door'), { type: 'TRAVEL', target: 'class-door' }).state;
+  state = perform(near(state, 'light-switch'), { type: 'TOGGLE_LIGHTS' }).state;
+  state = perform(near(state, 'blackboard'), { type: 'USE', id: 'I06', target: 'blackboard' }).state;
+  state = perform(portal(state, 'class-door'), { type: 'TRAVEL', target: 'class-door' }).state;
   state = perform(near(state, 'broadcast-door'), { type: 'UNLOCK_BROADCAST', answer: '308' }).state;
-  state = perform(state, { type: 'READ_HANDOFF' }).state;
+  state = perform(portal(state, 'library-door'), { type: 'TRAVEL', target: 'library-door' }).state;
+  state = perform(near(state, 'overdue-notice'), { type: 'PICKUP', id: 'I08' }).state;
+  state = perform(state, { type: 'COMBINE_NOTICE' }).state;
+  state = perform(portal(state, 'corridor-door'), { type: 'TRAVEL', target: 'corridor-door' }).state;
   state = perform(portal(state, 'broadcast-door'), { type: 'TRAVEL', target: 'broadcast-door' }).state;
+  state = perform(near(state, 'player'), { type: 'UNLOCK_PLAYER', answer: '1708' }).state;
+  state = perform(state, { type: 'READ_HANDOFF' }).state;
   return near(state, 'player');
 }
 function finalReady() {
@@ -49,7 +60,12 @@ function finalReady() {
   state = perform(state, { type: 'SOLVE', id: 'P03', answer: story.departureOrder }).state;
   state = perform(near(state, 'script'), { type: 'PICKUP', id: 'I05' }).state;
   state = perform(portal(state, 'corridor-door'), { type: 'TRAVEL', target: 'corridor-door' }).state;
-  return perform(portal(state, 'class-door'), { type: 'TRAVEL', target: 'class-door' }).state;
+  state = perform(portal(state, 'library-door'), { type: 'TRAVEL', target: 'library-door' }).state;
+  state = perform(near(state, 'acrostic-poem'), { type: 'READ', target: 'acrostic-poem' }).state;
+  state = perform(portal(state, 'corridor-door'), { type: 'TRAVEL', target: 'corridor-door' }).state;
+  state = perform(portal(state, 'class-door'), { type: 'TRAVEL', target: 'class-door' }).state;
+  state = perform(near(state, 'lectern'), { type: 'INSPECT_LECTERN' }).state;
+  return perform(near(state, 'classroom-window'), { type: 'USE', id: 'I07', target: 'classroom-window' }).state;
 }
 
 test('V-B01：開始遊戲只有第一聲，重複開始不重置或多響一次', () => {
@@ -186,7 +202,7 @@ test('V-B15：刷新保存與讀回一次性事件，不重複響鐘或生成道
   const loaded = restore(serialize(state));
   assert.deepEqual(loaded, state);
   assert.deepEqual(perform(loaded, { type: 'START' }).state.bells, state.bells);
-  assert.equal(loaded.inventory.length, 5);
+  assert.equal(loaded.inventory.length, 8);
 });
 test('V-B16：損壞或不相容存檔可安全拒絕，不悄悄略過機關', () => {
   for (const raw of ['bad json', 'null', '{}', JSON.stringify({ ...start(), schema: 99 }), JSON.stringify({ ...start(), solved: ['P03'] }), JSON.stringify({ ...start(), flags: { ...start().flags, exitOpen: true } }), JSON.stringify({ ...start(), bells: [1, 8] })]) {
@@ -220,6 +236,12 @@ test('V-I06：通關後仍可移動、往返閱讀，存檔保留通關與八聲
 test('V-PROP02：廣播室須輸入正確密碼，錯誤不改狀態', () => {
   let state = perform(portal(collectFirst(), 'class-door'), { type: 'TRAVEL', target: 'class-door' }).state;
   state = perform(near(state, 'register'), { type: 'SOLVE', id: 'P02', answer: '林予安' }).state;
+  state = perform(near(state, 'lens-cache'), { type: 'PICKUP', id: 'I06' }).state;
+  state = perform(portal(state, 'class-door'), { type: 'TRAVEL', target: 'class-door' }).state;
+  assert.equal(perform(near(state, 'blackboard'), { type: 'USE', id: 'I06', target: 'blackboard' }).ok, false);
+  state = perform(near(state, 'light-switch'), { type: 'TOGGLE_LIGHTS' }).state;
+  state = perform(near(state, 'blackboard'), { type: 'USE', id: 'I06', target: 'blackboard' }).state;
+  state = perform(portal(state, 'class-door'), { type: 'TRAVEL', target: 'class-door' }).state;
   state = portal(state, 'broadcast-door');
   assert.equal(perform(state, { type: 'TRAVEL', target: 'broadcast-door' }).ok, false);
   assert.equal(perform(state, { type: 'UNLOCK_BROADCAST', answer: '803' }).state, state);
@@ -227,6 +249,27 @@ test('V-PROP02：廣播室須輸入正確密碼，錯誤不改狀態', () => {
   assert.equal(opened.ok, true);
   assert.deepEqual(opened.state.bells, state.bells);
   assert.equal(restore(serialize(opened.state)).flags.broadcastOpen, true);
+});
+
+test('提案 6：未疊合通知單不能啟動播放設備，正確碼可啟動且不消耗道具', () => {
+  const base = reachThird();
+  let state = { ...base, flags: { ...base.flags, noticeCombined: false, playerPowered: false } };
+  assert.equal(perform(state, { type: 'UNLOCK_PLAYER', answer: '1708' }).ok, false);
+  state = perform(state, { type: 'COMBINE_NOTICE' }).state;
+  assert.equal(perform(state, { type: 'UNLOCK_PLAYER', answer: '8017' }).ok, false);
+  const powered = perform(state, { type: 'UNLOCK_PLAYER', answer: '1708' });
+  assert.equal(powered.state.flags.playerPowered, true);
+  assert.ok(powered.state.inventory.includes('I01') && powered.state.inventory.includes('I08'));
+});
+
+test('提案 5／9：透鏡需熄燈，描圖紙在窗邊揭示左右反轉', () => {
+  let state = reachThird();
+  state = perform(portal(state, 'corridor-door'), { type: 'TRAVEL', target: 'corridor-door' }).state;
+  state = perform(portal(state, 'class-door'), { type: 'TRAVEL', target: 'class-door' }).state;
+  assert.equal(perform(near(state, 'blackboard'), { type: 'USE', id: 'I06', target: 'blackboard' }).ok, true);
+  state = perform(near(state, 'classroom-window'), { type: 'USE', id: 'I07', target: 'classroom-window' }).state;
+  assert.equal(state.flags.mirrorClueRead, true);
+  assert.match(story.evidence.find(e => e.id === 'E09').text, /左右相反/);
 });
 
 test('V-PROP03：未讀交接單觸發排序陷阱，閱讀後可重試', () => {
@@ -266,4 +309,16 @@ test('舊版已完成排序的存檔可接續九宮格', () => {
   assert.equal(state.flags.broadcastOpen, true);
   assert.equal(state.flags.handoffRead, true);
   assert.deepEqual(state.bells, legacy.bells);
+});
+
+test('舊版已進入廣播室的存檔可略過新增的光線與設備前置', () => {
+  const legacy = createGame();
+  Object.assign(legacy, { started: true, scene: 'S03', solved: ['P01', 'P02'], inventory: ['I01', 'I02', 'I03', 'I04'], used: ['I03'], bells: [1, 2, 3], player: { x: 500, y: 550, facing: 'up' } });
+  legacy.flags = { doorOpen: true, broadcastOpen: true, handoffRead: false, returned: false, photoPlaced: false, scriptPlaced: false, exitOpen: false };
+  const restored = restore(serialize(legacy));
+  assert.ok(restored);
+  assert.equal(restored.flags.calendarClueRead, true);
+  assert.equal(restored.flags.playerPowered, true);
+  assert.equal(restored.flags.noticeCombined, true);
+  assert.equal(restored.scene, 'S03');
 });
