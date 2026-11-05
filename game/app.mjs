@@ -385,7 +385,15 @@ function showDoor(id) {
   const point = getPoint(state.scene, id), open = doorOpen(point);
   if (open) { walkToPoint(id, true); return; }
   if (id === 'broadcast-door' && state.solved.includes('P02')) {
-    openModal('借閱章密碼鎖', '<p>比對借書卡還書日與舊教室日曆，輸入星期數字和兩位節次。</p><form class="puzzle-form" id="broadcast-form"><input id="answer-input" aria-label="廣播室三位密碼" inputmode="numeric" maxlength="3" autocomplete="off"><button class="primary-button" type="submit">解鎖</button></form><p id="form-feedback" class="form-feedback" role="status"></p>', '廣播室門口');
+    const hintLevel = state.hints['broadcast-lock'] || 0;
+    const hints = story.broadcastHints || [];
+    openModal('借閱章密碼鎖', `<p>比對借書卡還書日與舊教室日曆，輸入星期數字和兩位節次。</p><form class="puzzle-form" id="broadcast-form"><input id="answer-input" aria-label="廣播室三位密碼" inputmode="numeric" maxlength="3" autocomplete="off"><button class="primary-button" type="submit">解鎖</button></form><p id="form-feedback" class="form-feedback" role="status"></p><div class="hint-area"><button id="broadcast-hint" type="button">${hintLevel >= hints.length ? '重新查看提示' : `需要提示？（${hintLevel}/${hints.length}）`}</button><p class="opening-note">每展開一層新提示扣 250 分；重看不扣分。</p><ol class="hint-list" id="broadcast-hint-list">${hints.slice(0, hintLevel).map(text => `<li>${esc(text)}</li>`).join('')}</ol></div>`, '廣播室門口');
+    $('#broadcast-hint').addEventListener('click', () => {
+      if (hintLevel < hints.length) act({ type: 'HINT', id: 'broadcast-lock' }, false);
+      const level = state.hints['broadcast-lock'] || 0;
+      $('#broadcast-hint-list').innerHTML = hints.slice(0, level).map(text => `<li>${esc(text)}</li>`).join('');
+      $('#broadcast-hint').textContent = level >= hints.length ? '已顯示全部提示' : `需要提示？（${level}/${hints.length}）`;
+    });
     $('#broadcast-form').addEventListener('submit', event => {
       event.preventDefault();
       const input = $('#answer-input');

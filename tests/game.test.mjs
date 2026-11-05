@@ -16,6 +16,18 @@ const portal = (state, id) => {
   const point = WORLD[state.scene].points.find(p => p.id === id);
   return { ...state, player: { ...state.player, x: point.x, y: point.y } };
 };
+
+test('broadcast lock hint reveals three non-advancing, score-counted levels', () => {
+  let state = start();
+  for (let i = 0; i < 3; i++) state = perform(state, { type: 'HINT', id: 'broadcast-lock' }).state;
+  assert.deepEqual(state.hints['broadcast-lock'], 3);
+  assert.match(story.broadcastHints[0], /1998\/05\/20/);
+  assert.match(story.broadcastHints[2], /第 8 節/);
+  state = perform(state, { type: 'HINT', id: 'broadcast-lock' }).state;
+  assert.equal(state.hints['broadcast-lock'], 3);
+  assert.deepEqual(state.bells, [1]);
+});
+
 function collectFirst() {
   let state = near(start(), 'drawer');
   state = perform(state, { type: 'SOLVE', id: 'P01', answer: '17' }).state;
