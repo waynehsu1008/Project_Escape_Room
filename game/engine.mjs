@@ -45,6 +45,12 @@ export function execute(original, action, story) {
     add(state.discovered,key); return done('已探索這個物件。');
   }
   if (action.type === 'HINT') {
+    if (action.id === 'broadcast-lock') {
+      const hints = story.broadcastHints || [];
+      if (!hints.length) return fail('這道謎題目前沒有提示。');
+      state.hints[action.id] = Math.min(hints.length, (state.hints[action.id] || 0) + 1);
+      return done(hints[state.hints[action.id] - 1]);
+    }
     const puzzle = story.puzzles.find(p => p.id === action.id);
     if (!puzzle) return fail('沒有這道謎題。');
     state.hints[action.id] = Math.min(3, (state.hints[action.id] || 0) + 1);

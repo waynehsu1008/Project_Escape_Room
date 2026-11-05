@@ -26,6 +26,11 @@
     {"evidenceId": "E04", "classId": "1998-3-2", "number": 17, "mask": "□予□"}
   ],
   "broadcastCode": "308",
+  "broadcastHints": [
+    "借書卡上的還書日期是 1998/05/20。先找出舊教室日曆上，這一天是星期幾。",
+    "密碼分成兩部分：星期幾用一位數表示，後面接上借書卡上的第幾節。",
+    "1998/05/20 是星期三；借書卡記著第 8 節。把星期數字和兩位節次接在一起。"
+  ],
   "photoSlot": 4,
   "departureOrder": ["return_book", "read_farewell", "transfer_school"],
   "initialSceneIds": ["S01"],
