@@ -135,7 +135,7 @@ function renderMap() {
     positionNoteVisibility = noteVisible;
     $('#map-image').src = world.image; $('#map-image').alt = `${world.name}俯視探索地圖`;
     $('#scene-name').textContent = world.name; $('#scene-subtitle').textContent = world.subtitle;
-    $('#map-objects').innerHTML = world.points.filter(p => p.id !== 'position-note' || noteVisible).map(p => `<button class="map-point ${p.sprite ? 'has-sprite' : ''} ${p.kind === 'door' ? 'door' : ''}" type="button" data-target="${p.id}" aria-label="${esc(p.name)}" style="left:${p.x / 10}%;top:${p.y / 6.67}%">${p.sprite ? `<img class="campus-sprite ${p.kind === 'npc' ? 'npc-sprite' : 'prop-sprite'}" src="${p.sprite}" alt="" draggable="false">` : ''}<span class="point-symbol">${icon(p.kind === 'npc' ? 'note' : p.kind === 'flavor' ? 'eye' : p.kind === 'door' ? 'door' : p.kind === 'read' ? 'eye' : p.kind === 'pickup' ? 'hand' : p.kind === 'use' ? 'hand' : 'lock')}</span><span class="point-label">${esc(p.name)}</span></button>`).join('');
+    $('#map-objects').innerHTML = world.points.filter(p => p.id !== 'position-note' || noteVisible).map(p => `<button class="map-point ${p.sprite ? 'has-sprite' : ''} ${p.kind === 'door' ? 'door' : ''}" type="button" data-target="${p.id}" aria-label="${esc(p.name)}" style="left:${p.x / 10}%;top:${p.y / 6.67}%">${p.sprite ? `<img class="campus-sprite ${p.kind === 'npc' ? 'npc-sprite' : 'prop-sprite'}" src="${p.sprite}" alt="" draggable="false">` : ''}<span class="point-symbol">${icon(p.actionIcon || (p.kind === 'npc' ? 'note' : p.kind === 'flavor' ? 'eye' : p.kind === 'door' ? 'door' : p.kind === 'read' ? 'eye' : p.kind === 'pickup' ? 'hand' : p.kind === 'use' ? 'hand' : 'lock'))}</span><span class="point-label">${esc(p.name)}</span></button>`).join('');
     modal.close();
     $('#map-objects').querySelectorAll('[data-target]').forEach(button => button.addEventListener('click', event => { event.stopPropagation(); walkToPoint(button.dataset.target); }));
   }
@@ -237,9 +237,11 @@ function showRead(id) {
   } else if (id === 'science') {
     body = `<img class="modal-art" src="${art.science}" alt="科展公布欄"><p>膠帶遮住了部分姓名，但班級與座號仍清楚可讀。</p><div class="clue-paper"><div class="document-meta"><span>1998 · 科展參展名單</span><span>三年二班</span></div>座號：17<br>姓名：<strong>□予□</strong></div><p class="roster-summary">也許能和另一份同班、同座號的資料比對。背包中的文件可以隨時重讀。</p>`;
   } else {
-    body = `<img class="modal-art" src="${art[id] || art.player}" alt="${esc(point.name)}"><div class="clue-paper">${esc(clueText(id))}</div>`;
+    const useLens = id === 'blackboard' && state.inventory.includes('I06') && !state.flags.calendarClueRead ? '<div class="modal-actions"><button class="primary-button" data-use-item="I06" type="button">使用科展螢光透鏡</button></div>' : '';
+    body = `<img class="modal-art" src="${art[id] || art.player}" alt="${esc(point.name)}"><div class="clue-paper">${esc(clueText(id))}</div>${useLens}`;
   }
   openModal(point.name, body, `${WORLD[state.scene].name} · 探索紀錄`);
+  if (id === 'blackboard') bindUseButtons(id);
 }
 function hintArea(puzzleId) {
   const level = state.hints[puzzleId] || 0, puzzle = story.puzzles.find(p => p.id === puzzleId);
@@ -479,7 +481,9 @@ function showCampus(id) {
     $('#leave-conversation').addEventListener('click', closeModal);
   } else {
     const text = id === 'classroom-window' && state.flags.mirrorClueRead ? story.evidence.find(e => e.id === 'E09').text : id === 'position-note' ? story.evidence.find(e => e.id === 'E11').text : prop.text;
-    openModal(prop.name, `<img class="modal-art" src="${prop.image}" alt="${esc(prop.name)}"><div class="clue-paper">${esc(text)}</div><p class="opening-note" style="margin-top:18px">你把這段校園日常記在探索筆記裡。物品留在原處，不占用背包。</p>`, '校園物件 · 查看與觀察');
+    const useTracingPaper = id === 'classroom-window' && state.inventory.includes('I07') && !state.flags.mirrorClueRead ? '<div class="modal-actions"><button class="primary-button" data-use-item="I07" type="button">使用半透明描圖紙</button></div>' : '';
+    openModal(prop.name, `<img class="modal-art" src="${prop.image}" alt="${esc(prop.name)}"><div class="clue-paper">${esc(text)}</div>${useTracingPaper}<p class="opening-note" style="margin-top:18px">你把這段校園日常記在探索筆記裡。物品留在原處，不占用背包。</p>`, '校園物件 · 查看與觀察');
+    if (id === 'classroom-window') bindUseButtons(id);
   }
 }
 function showLightSwitch() {
