@@ -60,9 +60,9 @@ node --test tests/*.test.mjs
 
 | 角色 | 責任與主要檔案 |
 | --- | --- |
-| 小安 | 劇情、謎題與素材：BRIEF.md、VERIFY／TESTS 劇情段、content/、assets/、CREDITS.md、PLAYTEST.md；本次主筆共同 AGENTS 討論稿 |
-| 小星 | 網頁與機關：PLANS.md、VERIFY／TESTS 機關段、game/、前端入口與機關測試；保留 PLANS.v1.md |
-| 小雪 | 測試與整合：TESTS 整合段、完整路線驗證、README.md 與整合審查 |
+| 邱于秦 | 劇情、謎題 |
+| 許宸瑋 | 網頁、機關、素材 |
+| 陳世恩 | 測試、整合 |
 
 角色名稱用於責任劃分，並非真實 Git 提交身分。此第一版由本對話依使用者完整遊戲要求製作，團隊組員姓名、各自的代表 PR／Issue 及人工審查紀錄仍須依實際情況填入，不預填虛構貢獻。
 
