@@ -62,10 +62,10 @@ export const PROPS = {
   'position-note': { name: '講台下的站位便箋', image: 'assets/objects/campus-03-lectern-script-stand-v1.png', text: '便箋背面畫著簡單九宮格，標出 16 號在台上視角的右側，並註明「同一排；風紀股長不在正旁邊」。照片從台下觀看時，左右會反過來。' },
   'archive-box': { name: '校慶節目單紙箱', image: 'assets/objects/campus-08-archive-cabinet-v1.png', text: '一疊校慶節目單：合唱、短劇、點歌時間。有人把錯字改了又改，留下好幾層筆跡。紙箱裡沒有新的通關道具，只有被認真準備過的日子。' }
 };
-const point = (id, x, y, stand) => ({ id, name: (NPCS[id] || PROPS[id]).name, kind: NPCS[id] ? 'npc' : 'flavor', x, y, stand, range: 85, sprite: NPCS[id]?.image || (['old-basketball','old-thermos','spare-cassette'].includes(id) ? PROPS[id].image : null) });
+const point = (id, x, y, stand) => ({ id, name: (NPCS[id] || PROPS[id]).name, kind: NPCS[id] ? 'npc' : 'flavor', actionIcon: ['lens-cache','tracing-paper','overdue-notice'].includes(id) ? 'hand' : undefined, x, y, stand, range: 85, sprite: NPCS[id]?.image || (['old-basketball','old-thermos','spare-cassette'].includes(id) ? PROPS[id].image : null) });
 export const CAMPUS_POINTS = {
   S01: [point('return-calendar',565,140,[565,185]),point('photo-left-note',420,490,[420,525]),point('classroom-window',90,210,[135,210]),point('npc-caretaker',150,450,[200,450]),point('old-basketball',780,470,[730,470]),point('old-thermos',110,290,[160,290]),point('chalk-box',650,145,[650,190]),point('lost-umbrella',145,565,[190,550])],
-  S02: [point('absence-list',700,115,[700,170]),point('photo-monitor-note',705,500,[705,540]),point('lens-cache',825,460,[775,460]),point('tracing-paper',520,500,[520,540]),point('npc-alumnus',320,350,[370,350]),point('lost-notice',190,125,[190,180]),point('old-bench',350,140,[350,185])],
+  S02: [point('absence-list',650,130,[650,185]),point('photo-monitor-note',705,500,[705,540]),point('lens-cache',825,460,[775,460]),point('tracing-paper',520,500,[520,540]),point('npc-alumnus',320,350,[370,350]),point('lost-notice',190,125,[190,180]),point('old-bench',350,140,[350,185])],
   S03: [point('npc-broadcast',750,400,[700,400]),point('spare-cassette',660,300,[660,350]),point('power-cord',270,250,[270,300]),point('archive-box',800,160,[800,220])],
   S04: [point('library-ledger',830,160,[830,220]),point('folded-letter',280,450,[325,450]),point('library-notice',500,125,[500,180]),point('acrostic-poem',680,460,[650,500]),point('overdue-notice',200,150,[230,210])]
 };
