@@ -16,6 +16,18 @@ const portal = (state, id) => {
   const point = WORLD[state.scene].points.find(p => p.id === id);
   return { ...state, player: { ...state.player, x: point.x, y: point.y } };
 };
+
+test('broadcast lock hint reveals three non-advancing, score-counted levels', () => {
+  let state = start();
+  for (let i = 0; i < 3; i++) state = perform(state, { type: 'HINT', id: 'broadcast-lock' }).state;
+  assert.deepEqual(state.hints['broadcast-lock'], 3);
+  assert.match(story.broadcastHints[0], /1998\/05\/20/);
+  assert.match(story.broadcastHints[2], /第 8 節/);
+  state = perform(state, { type: 'HINT', id: 'broadcast-lock' }).state;
+  assert.equal(state.hints['broadcast-lock'], 3);
+  assert.deepEqual(state.bells, [1]);
+});
+
 function collectFirst() {
   let state = near(start(), 'drawer');
   state = perform(state, { type: 'SOLVE', id: 'P01', answer: '17' }).state;
@@ -27,7 +39,20 @@ function reachThird() {
   let state = perform(portal(collectFirst(), 'class-door'), { type: 'TRAVEL', target: 'class-door' }).state;
   state = perform(near(state, 'register'), { type: 'SOLVE', id: 'P02', answer: '林予安' }).state;
   state = perform(near(state, 'cabinet'), { type: 'PICKUP', id: 'I04' }).state;
+  state = perform(near(state, 'lens-cache'), { type: 'PICKUP', id: 'I06' }).state;
+  state = perform(near(state, 'tracing-paper'), { type: 'PICKUP', id: 'I07' }).state;
+  state = perform(portal(state, 'class-door'), { type: 'TRAVEL', target: 'class-door' }).state;
+  state = perform(near(state, 'light-switch'), { type: 'TOGGLE_LIGHTS' }).state;
+  state = perform(near(state, 'blackboard'), { type: 'USE', id: 'I06', target: 'blackboard' }).state;
+  state = perform(portal(state, 'class-door'), { type: 'TRAVEL', target: 'class-door' }).state;
+  state = perform(near(state, 'broadcast-door'), { type: 'UNLOCK_BROADCAST', answer: '308' }).state;
+  state = perform(portal(state, 'library-door'), { type: 'TRAVEL', target: 'library-door' }).state;
+  state = perform(near(state, 'overdue-notice'), { type: 'PICKUP', id: 'I08' }).state;
+  state = perform(state, { type: 'COMBINE_NOTICE' }).state;
+  state = perform(portal(state, 'corridor-door'), { type: 'TRAVEL', target: 'corridor-door' }).state;
   state = perform(portal(state, 'broadcast-door'), { type: 'TRAVEL', target: 'broadcast-door' }).state;
+  state = perform(near(state, 'player'), { type: 'UNLOCK_PLAYER', answer: '1708' }).state;
+  state = perform(state, { type: 'READ_HANDOFF' }).state;
   return near(state, 'player');
 }
 function finalReady() {
@@ -35,7 +60,12 @@ function finalReady() {
   state = perform(state, { type: 'SOLVE', id: 'P03', answer: story.departureOrder }).state;
   state = perform(near(state, 'script'), { type: 'PICKUP', id: 'I05' }).state;
   state = perform(portal(state, 'corridor-door'), { type: 'TRAVEL', target: 'corridor-door' }).state;
-  return perform(portal(state, 'class-door'), { type: 'TRAVEL', target: 'class-door' }).state;
+  state = perform(portal(state, 'library-door'), { type: 'TRAVEL', target: 'library-door' }).state;
+  state = perform(near(state, 'acrostic-poem'), { type: 'READ', target: 'acrostic-poem' }).state;
+  state = perform(portal(state, 'corridor-door'), { type: 'TRAVEL', target: 'corridor-door' }).state;
+  state = perform(portal(state, 'class-door'), { type: 'TRAVEL', target: 'class-door' }).state;
+  state = perform(near(state, 'lectern'), { type: 'INSPECT_LECTERN' }).state;
+  return perform(near(state, 'classroom-window'), { type: 'USE', id: 'I07', target: 'classroom-window' }).state;
 }
 
 test('V-B01：開始遊戲只有第一聲，重複開始不重置或多響一次', () => {
@@ -130,7 +160,7 @@ test('V-B12：照片、告別稿、回應固定順序，不能只持有或提早
   assert.equal(state.ended, false);
   assert.equal(perform(near(state, 'lectern'), { type: 'ANSWER' }).ok, false);
   assert.equal(perform(near(state, 'lectern'), { type: 'USE', id: 'I05', target: 'lectern' }).ok, false);
-  state = perform(near(state, 'photo'), { type: 'USE', id: 'I02', target: 'photo' }).state;
+  state = perform(near(state, 'photo'), { type: 'USE', id: 'I02', target: 'photo', slot: 4 }).state;
   assert.deepEqual(state.bells, [1, 2, 3, 4, 5, 6]);
   assert.equal(state.flags.exitOpen, false);
   state = perform(near(state, 'lectern'), { type: 'USE', id: 'I05', target: 'lectern' }).state;
@@ -139,7 +169,7 @@ test('V-B12：照片、告別稿、回應固定順序，不能只持有或提早
 });
 test('V-B13／V-I01：完整路線必須回應後親自走到出口才 END01', () => {
   let state = finalReady();
-  state = perform(near(state, 'photo'), { type: 'USE', id: 'I02', target: 'photo' }).state;
+  state = perform(near(state, 'photo'), { type: 'USE', id: 'I02', target: 'photo', slot: 4 }).state;
   state = perform(near(state, 'lectern'), { type: 'USE', id: 'I05', target: 'lectern' }).state;
   state = perform(state, { type: 'ANSWER' }).state;
   assert.equal(state.flags.exitOpen, true);
@@ -156,10 +186,10 @@ test('V-B13／V-I01：完整路線必須回應後親自走到出口才 END01', (
 test('V-I02：漏拿照片或告別稿可返回補拿，沒有永久卡死', () => {
   let state = finalReady();
   state.inventory = state.inventory.filter(id => id !== 'I02');
-  assert.equal(perform(near(state, 'photo'), { type: 'USE', id: 'I02', target: 'photo' }).ok, false);
+  assert.equal(perform(near(state, 'photo'), { type: 'USE', id: 'I02', target: 'photo', slot: 4 }).ok, false);
   state = perform(near(state, 'drawer'), { type: 'PICKUP', id: 'I02' }).state;
   assert.ok(state.inventory.includes('I02'));
-  assert.equal(perform(near(state, 'photo'), { type: 'USE', id: 'I02', target: 'photo' }).ok, true);
+  assert.equal(perform(near(state, 'photo'), { type: 'USE', id: 'I02', target: 'photo', slot: 4 }).ok, true);
 });
 test('V-B14：提示逐層增加至三層，不增加鐘聲', () => {
   let state = start();
@@ -172,7 +202,7 @@ test('V-B15：刷新保存與讀回一次性事件，不重複響鐘或生成道
   const loaded = restore(serialize(state));
   assert.deepEqual(loaded, state);
   assert.deepEqual(perform(loaded, { type: 'START' }).state.bells, state.bells);
-  assert.equal(loaded.inventory.length, 5);
+  assert.equal(loaded.inventory.length, 8);
 });
 test('V-B16：損壞或不相容存檔可安全拒絕，不悄悄略過機關', () => {
   for (const raw of ['bad json', 'null', '{}', JSON.stringify({ ...start(), schema: 99 }), JSON.stringify({ ...start(), solved: ['P03'] }), JSON.stringify({ ...start(), flags: { ...start().flags, exitOpen: true } }), JSON.stringify({ ...start(), bells: [1, 8] })]) {
@@ -183,4 +213,112 @@ test('V-B17：未知動作與未開始的機關不改動狀態', () => {
   const state = createGame();
   assert.equal(perform(state, { type: 'UNKNOWN' }).ok, false);
   assert.equal(perform(near(state, 'drawer'), { type: 'SOLVE', id: 'P01', answer: '17' }).ok, false);
+});
+
+test('V-I06：通關後仍可移動、往返閱讀，存檔保留通關與八聲鐘', () => {
+  let state = finalReady();
+  state = perform(near(state, 'photo'), { type: 'USE', id: 'I02', target: 'photo', slot: 4 }).state;
+  state = perform(near(state, 'lectern'), { type: 'USE', id: 'I05', target: 'lectern' }).state;
+  state = perform(state, { type: 'ANSWER' }).state;
+  state = perform(portal(state, 'class-door'), { type: 'TRAVEL', target: 'class-door' }).state;
+  state = perform(portal(state, 'exit'), { type: 'TRAVEL', target: 'exit' }).state;
+  const moved = movePlayer(state, -20, 0);
+  assert.notEqual(moved.player.x, state.player.x);
+  const returned = perform(portal(moved, 'class-door'), { type: 'TRAVEL', target: 'class-door' });
+  assert.equal(returned.ok, true);
+  state = returned.state;
+  assert.equal(perform(near(state, 'blackboard'), { type: 'READ', target: 'blackboard' }).ok, true);
+  assert.equal(state.ended, true);
+  assert.deepEqual(state.bells, [1, 2, 3, 4, 5, 6, 7, 8]);
+  assert.deepEqual(restore(serialize(state)), state);
+});
+
+test('V-PROP02：廣播室須輸入正確密碼，錯誤不改狀態', () => {
+  let state = perform(portal(collectFirst(), 'class-door'), { type: 'TRAVEL', target: 'class-door' }).state;
+  state = perform(near(state, 'register'), { type: 'SOLVE', id: 'P02', answer: '林予安' }).state;
+  state = perform(near(state, 'lens-cache'), { type: 'PICKUP', id: 'I06' }).state;
+  state = perform(portal(state, 'class-door'), { type: 'TRAVEL', target: 'class-door' }).state;
+  assert.equal(perform(near(state, 'blackboard'), { type: 'USE', id: 'I06', target: 'blackboard' }).ok, false);
+  state = perform(near(state, 'light-switch'), { type: 'TOGGLE_LIGHTS' }).state;
+  state = perform(near(state, 'blackboard'), { type: 'USE', id: 'I06', target: 'blackboard' }).state;
+  state = perform(portal(state, 'class-door'), { type: 'TRAVEL', target: 'class-door' }).state;
+  state = portal(state, 'broadcast-door');
+  assert.equal(perform(state, { type: 'TRAVEL', target: 'broadcast-door' }).ok, false);
+  assert.equal(perform(state, { type: 'UNLOCK_BROADCAST', answer: '803' }).state, state);
+  const opened = perform(state, { type: 'UNLOCK_BROADCAST', answer: '308' });
+  assert.equal(opened.ok, true);
+  assert.deepEqual(opened.state.bells, state.bells);
+  assert.equal(restore(serialize(opened.state)).flags.broadcastOpen, true);
+});
+
+test('提案 6：未疊合通知單不能啟動播放設備，正確碼可啟動且不消耗道具', () => {
+  const base = reachThird();
+  let state = { ...base, flags: { ...base.flags, noticeCombined: false, playerPowered: false } };
+  assert.equal(perform(state, { type: 'UNLOCK_PLAYER', answer: '1708' }).ok, false);
+  state = perform(state, { type: 'COMBINE_NOTICE' }).state;
+  assert.equal(perform(state, { type: 'UNLOCK_PLAYER', answer: '8017' }).ok, false);
+  const powered = perform(state, { type: 'UNLOCK_PLAYER', answer: '1708' });
+  assert.equal(powered.state.flags.playerPowered, true);
+  assert.ok(powered.state.inventory.includes('I01') && powered.state.inventory.includes('I08'));
+});
+
+test('提案 5／9：透鏡需熄燈，描圖紙在窗邊揭示左右反轉', () => {
+  let state = reachThird();
+  state = perform(portal(state, 'corridor-door'), { type: 'TRAVEL', target: 'corridor-door' }).state;
+  state = perform(portal(state, 'class-door'), { type: 'TRAVEL', target: 'class-door' }).state;
+  assert.equal(perform(near(state, 'blackboard'), { type: 'USE', id: 'I06', target: 'blackboard' }).ok, true);
+  state = perform(near(state, 'classroom-window'), { type: 'USE', id: 'I07', target: 'classroom-window' }).state;
+  assert.equal(state.flags.mirrorClueRead, true);
+  assert.match(story.evidence.find(e => e.id === 'E09').text, /左右相反/);
+});
+
+test('V-PROP03：未讀交接單觸發排序陷阱，閱讀後可重試', () => {
+  const state = reachThird();
+  const unread = { ...state, flags: { ...state.flags, handoffRead: false } };
+  const attempt = { type: 'SOLVE', id: 'P03', answer: story.departureOrder };
+  const trapped = perform(unread, attempt);
+  assert.equal(trapped.code, 'unread-handoff');
+  assert.equal(trapped.state, unread);
+  const read = perform(unread, { type: 'READ_HANDOFF' });
+  assert.equal(read.ok, true);
+  assert.equal(perform(read.state, attempt).ok, true);
+});
+
+test('V-PROP04：九宮格錯位保留照片，正確站位才能放回', () => {
+  const state = near(finalReady(), 'photo');
+  const use = { type: 'USE', id: 'I02', target: 'photo', slot: 4 };
+  assert.equal(perform(state, { ...use, slot: 0 }).state, state);
+  const placed = perform(state, { ...use, slot: 4 });
+  assert.equal(placed.state.flags.photoPlaced, true);
+  assert.equal(perform(placed.state, { ...use, slot: 4 }).state.bells.length, 6);
+});
+
+test('V-PROP01：35 號姓名不能取代 17 號，錯誤後仍可解題', () => {
+  const state = near(perform(portal(collectFirst(), 'class-door'), { type: 'TRAVEL', target: 'class-door' }).state, 'register');
+  const wrong = perform(state, { type: 'SOLVE', id: 'P02', answer: '林予晴' });
+  assert.equal(wrong.state, state);
+  assert.match(wrong.message, /日期與身分/);
+  assert.equal(perform(state, { type: 'SOLVE', id: 'P02', answer: '林予安' }).ok, true);
+});
+
+test('舊版已完成排序的存檔可接續九宮格', () => {
+  const legacy = finalReady();
+  delete legacy.flags.broadcastOpen;
+  delete legacy.flags.handoffRead;
+  const state = restore(serialize(legacy));
+  assert.equal(state.flags.broadcastOpen, true);
+  assert.equal(state.flags.handoffRead, true);
+  assert.deepEqual(state.bells, legacy.bells);
+});
+
+test('舊版已進入廣播室的存檔可略過新增的光線與設備前置', () => {
+  const legacy = createGame();
+  Object.assign(legacy, { started: true, scene: 'S03', solved: ['P01', 'P02'], inventory: ['I01', 'I02', 'I03', 'I04'], used: ['I03'], bells: [1, 2, 3], player: { x: 500, y: 550, facing: 'up' } });
+  legacy.flags = { doorOpen: true, broadcastOpen: true, handoffRead: false, returned: false, photoPlaced: false, scriptPlaced: false, exitOpen: false };
+  const restored = restore(serialize(legacy));
+  assert.ok(restored);
+  assert.equal(restored.flags.calendarClueRead, true);
+  assert.equal(restored.flags.playerPowered, true);
+  assert.equal(restored.flags.noticeCombined, true);
+  assert.equal(restored.scene, 'S03');
 });

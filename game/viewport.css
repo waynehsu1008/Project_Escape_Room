@@ -1,0 +1,40 @@
+/* Fit the whole game shell to the visible viewport; documents keep their own scroll. */
+@media(min-width:600px) and (max-width:850px) and (max-height:500px){
+ .app .game-layout{grid-template-columns:minmax(0,1fr) 220px;grid-template-rows:minmax(0,1fr)}
+ .app .sidebar{display:flex;gap:0;padding:9px 12px}.app .sidebar h2{font-size:12px;padding-bottom:4px}
+ .app .objective-main{font-size:11px;margin:5px 0}.app .objective-detail{font-size:9px;line-height:1.5}
+ .app .inventory-section{margin-top:auto;padding-top:6px}.app .inventory-slot{max-height:28px}
+ .app .journal-button{margin-top:6px}.app .bag-caption{display:none}
+}
+html,body{height:100%;margin:0}
+.app{height:100dvh;min-height:0;display:grid;grid-template-rows:54px 70px minmax(0,1fr) 42px;padding-bottom:8px}
+.topbar{min-height:0}.scene-heading{min-height:0;padding:8px}.scene-title h1{font-size:27px}.scene-line{height:43px}
+.game-layout{min-height:0;grid-template-columns:minmax(0,1fr) 270px;align-items:stretch}
+.map-panel{min-height:0;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.game-world{flex:none;max-width:100%}.interaction-strip{flex:none;min-height:36px;width:100%}
+.sidebar{min-height:0;padding:14px 18px 10px}.sidebar h2{font-size:16px;padding-bottom:8px}
+.objective-main{font-size:15px;margin:10px 0 6px;line-height:1.7}.objective-detail{font-size:11px;line-height:1.7}
+.objective-section>.text-button{margin-top:8px}.scene-section{margin-top:14px}.scene-list{padding-top:9px}
+.scene-row{padding:5px;margin-bottom:5px;gap:10px}.scene-row img{width:57px;height:37px}.scene-row h3{font-size:13px;margin-bottom:4px}.route-note{font-size:9px}
+.inventory-section{padding-top:10px}.inventory-slots{margin-top:10px}.bag-caption{margin-top:7px}.journal-button{margin-top:10px;padding-top:9px}
+.footer{min-height:0;margin-top:8px}.game-title{font-size:20px}.toast{bottom:52px}.selected-tool{bottom:52px}
+@media(min-width:851px) and (max-height:700px){
+ .app{grid-template-rows:46px 58px minmax(0,1fr) 36px}.scene-heading{padding:5px}.scene-title h1{font-size:23px;margin-bottom:4px}.scene-line{height:35px}
+ .sidebar{padding:10px 14px 8px}.sidebar h2{font-size:14px;padding-bottom:5px}.objective-main{font-size:13px;margin:7px 0 4px}.objective-detail{font-size:10px}.scene-section{margin-top:8px}
+ .scene-row img{width:47px;height:28px}.scene-row h3{font-size:12px}.scene-row p,.route-note{font-size:9px}.scene-row{gap:8px;padding:3px;margin-bottom:3px}.scene-list{padding-top:6px}
+ .inventory-slots{margin-top:7px;grid-template-columns:repeat(5,minmax(0,38px))}.bag-caption{font-size:9px;margin-top:4px}.inventory-section{padding-top:7px}.journal-button{margin-top:7px;padding-top:7px}.footer{font-size:9px}
+}
+@media(max-width:850px){
+ .app{grid-template-rows:48px 64px minmax(0,1fr) 34px;padding-bottom:5px}
+ .game-title{font-size:17px}.header-tools{gap:6px}.icon-button{width:30px;height:30px}.header-tools input[type=range]{width:45px!important}
+ .scene-title h1{font-size:23px}.scene-title p{font-size:9px}.scene-line{height:35px}
+ .game-layout{grid-template-columns:1fr;grid-template-rows:minmax(0,1fr) auto;gap:9px}
+ .sidebar{display:grid;grid-template-columns:1fr 1fr;gap:9px 14px;padding:11px 13px}
+ .scene-section{display:none}.sidebar h2{font-size:14px;padding-bottom:6px}.objective-main{font-size:12px;margin:7px 0 4px}.objective-detail{font-size:10px}.objective-section>.text-button{margin-top:5px}
+ .inventory-section{padding:0}.inventory-slots{margin-top:9px;grid-template-columns:repeat(5,minmax(0,1fr))}.inventory-slot{max-height:42px}.bag-caption{font-size:9px;margin-top:5px}
+ .journal-button{grid-column:1/-1;margin:0;padding-top:7px;font-size:11px}.footer{margin-top:5px}.footer .save-status{max-width:none;font-size:9px}.footer p{gap:8px}.footer kbd{height:18px;min-width:18px}
+ .touch-controls{bottom:43px;left:12px}.touch-controls button{width:28px;height:28px}.interaction-strip{min-height:32px;padding:5px 9px}
+}
+@media(max-width:850px) and (max-height:650px){
+ .app{grid-template-rows:40px 50px minmax(0,1fr) 30px}.sidebar{padding:7px 10px;gap:6px 10px}.sidebar h2{font-size:12px}.objective-main{font-size:11px;line-height:1.5;margin:5px 0 3px}.objective-detail{font-size:9px;line-height:1.5}.bag-caption{display:none}.inventory-slot{max-height:30px}.journal-button{padding-top:5px;font-size:10px}.scene-title h1{font-size:20px}
+}

@@ -1,5 +1,9 @@
 # CREDITS.md
 
+## 校園 NPC 與可選物件（2026-10-31）
+
+新增 assets/generated/campus/ 下三張虛構 NPC（周伯、王學長、小禾）與三張物件（籃球籃、保溫瓶、卡帶），均以 OpenAI 內建 image_gen 各別全新生成，保留原圖與透明通道，沒有下載第三方人物或遊戲物件。每張完整提示詞見同名 .prompt.txt，清單見該目錄 README.md。新增對話與觀察文字由本專案以 AI 協助原創撰寫，供團隊審閱；不是史料、真實人物證詞或新的必要通關條件。其他觀察點沿用既有素材，原授權紀錄不變。
+
 ## 第一版新增與採用素材（2026-10-30）
 
 本次依使用者要求，以 OpenAI 內建 image_gen 生成缺少的圖檔，未使用 CLI/API fallback。下列檔案均已保存於專案，完整提示詞在同目錄的同名 .prompt.txt；生成原圖未覆蓋原有素材。
@@ -84,3 +88,20 @@
 - 修改情況：直接複製生成 PNG，保留原始尺寸與 alpha；未裁切、縮放、重新去背或覆蓋原始生成檔。
 - 檢查：10 張均已目視檢查及讀取尺寸，alpha 掃描確認每張具有透明像素與物件內容。尚未整合遊戲或試玩。
 - 尺寸、SHA-256 與 alpha 計數：assets/objects/manifest.json；用途及完整生成提示詞連結：assets/objects/README.md。
+
+## 原創背景音樂 After Class（2026-10-30）
+
+互動音效（2026-10-31）：game/effects.mjs 以振盪器、包絡與程式產生的噪音合成按鍵、翻頁、拾取、放置、解鎖、開門、成功、錯誤與通關九類音效。沒有外部音檔或取樣；此音效程式及產生的聲音採 CC0-1.0，不改變其他素材授權。音效遵循遊戲音效開關，背景分頁不播放；重複點擊有限流，已完成的機關不重播成功音。
+以 Web Audio 原創合成的 72 BPM chill 背景音樂，使用柔和電鋼琴音色、低音與延伸和弦，無外部錄音、取樣或下載素材。實作：game/music.mjs。此音樂程式及其生成的原創樂曲採 CC0-1.0 公眾領域貢獻；不影響專案其他素材的授權。
+
+試聽檔：assets/audio/after-class-preview.wav（約 30 秒，原創樂曲離線合成預覽）；重建指令：node scripts/render-music-preview.mjs。WAV 與渲染器同採 CC0-1.0。
+
+
+## NPC v2 與圖書館
+
+三位 NPC v2 以內建 imagegen 生成，以既有 player-four-directions-v1.png 作畫風與比例參考，原 NPC v1 作角色身分參考。檔案與逐張完整提示存於 assets/generated/campus/npc-*-v2.png 與同名 .prompt.txt；保留 v1。圖書館沿用 assets/maps/campus-03-library-v1.png，來源與授權沿用原素材紀錄。便箋支線文字為本專案新增。
+
+
+## 黑白像素選單圖示
+
+目標、地圖、背包與筆記四張圖示使用內建 imagegen 生成，透明背景，存於 assets/generated/menu/*-v1.png；逐張完整提示存於同名 .prompt.txt，保留生成原圖。

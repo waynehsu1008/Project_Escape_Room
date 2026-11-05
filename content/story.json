@@ -25,6 +25,14 @@
     {"evidenceId": "E03", "classId": "1998-3-2", "number": 17, "mask": "林□安"},
     {"evidenceId": "E04", "classId": "1998-3-2", "number": 17, "mask": "□予□"}
   ],
+  "broadcastCode": "308",
+  "playerActivationCode": "1708",
+  "broadcastHints": [
+    "借書卡上的還書日期是 1998/05/20。先找出舊教室日曆上，這一天是星期幾。",
+    "密碼分成兩部分：星期幾用一位數表示，後面接上借書卡上的第幾節。",
+    "1998/05/20 是星期三；借書卡記著第 8 節。把星期數字和兩位節次接在一起。"
+  ],
+  "photoSlot": 4,
   "departureOrder": ["return_book", "read_farewell", "transfer_school"],
   "initialSceneIds": ["S01"],
   "initialItemIds": [],
@@ -40,7 +48,8 @@
   "scenes": [
     {"id": "S01", "name": "舊教室", "description": "褪色課桌、黑板與一張留有空白的合照。門被未結束的點名困住。"},
     {"id": "S02", "name": "走廊資料區", "description": "科展名單、紀念名冊與廣播室資料櫃；資料上的班級和座號仍可辨識。"},
-    {"id": "S03", "name": "廣播室", "description": "老式播放設備和三段散落的錄音稿，等待被放回原本的順序。"}
+    {"id": "S03", "name": "廣播室", "description": "老式播放設備和三段散落的錄音稿，等待被放回原本的順序。"},
+    {"id": "S04", "name": "圖書館", "description": "借閱紀錄、未寄出的便箋與讀書會回信，補上林予安轉學前的約定；讀書會短詩與打孔通知也留著通關所需線索。確認姓名後開放。"}
   ],
   "evidence": [
     {
@@ -53,11 +62,11 @@
     },
     {
       "id": "E03", "sceneId": "S01", "requiresPuzzles": ["P01"],
-      "text": "借書卡：1998 年三年二班／17 號／林□安。姓名中間一字磨損，借閱班級與座號清楚可讀。"
+      "text": "借書卡：1998 年三年二班／17 號／林□安。姓名中間一字磨損。還書章：1998/05/20，第 8 節。"
     },
     {
       "id": "E04", "sceneId": "S02", "requiresPuzzles": ["P01"],
-      "text": "科展名單：1998 年三年二班／17 號／□予□。第一與第三字被膠帶遮住，中間一字仍可辨識。"
+      "text": "科展名單：1998 年三年二班／17 號／□予□。展出日期：1998/05/21。第一與第三字被膠帶遮住，中間一字仍可辨識。"
     },
     {
       "id": "E05", "sceneId": "S02", "requiresPuzzles": ["P02"],
@@ -69,15 +78,22 @@
     },
     {
       "id": "E07", "sceneId": "S01", "requiresPuzzles": [],
-      "text": "班級紀念合照留有一格明顯的空白相框，尺寸和一張個人照相同；下方題字是『曾在這一班的我們』。"
-    }
+      "text": "班級紀念合照的局部是九宮格。比對教室與走廊的兩張字條，從候選空位找出十七號的站位；下方題字是『曾在這一班的我們』。"
+    },
+    {"id": "E08", "sceneId": "S01", "requiresPuzzles": ["P02"], "text": "熄燈後以科展螢光透鏡照向黑板，浮現最後還書日期：1998/05/20（三）。"},
+    {"id": "E09", "sceneId": "S01", "requiresPuzzles": ["P02"], "text": "描圖紙上的鏡像字跡提醒：當年拍照者的左右，和現在台下觀看照片的左右相反。"},
+    {"id": "E10", "sceneId": "S04", "requiresPuzzles": ["P02"], "text": "贈書短詩每行首字連起來是『講台下藏』。"},
+    {"id": "E11", "sceneId": "S01", "requiresPuzzles": ["P02"], "text": "站位便箋：『16 號在我右手邊；我們站在同一排。』這是站在台上拍照時的方向。"}
   ],
   "items": [
     {"id": "I01", "name": "17 號借書卡", "description": "姓名不完整，但班級與座號清楚可讀。", "pickupSceneId": "S01", "pickupTarget": "drawer", "requiresPuzzle": "P01"},
     {"id": "I02", "name": "個人照", "description": "一張當年學生的個人照，背面寫著『請幫我留一個位置』。", "pickupSceneId": "S01", "pickupTarget": "drawer", "requiresPuzzle": "P01"},
     {"id": "I03", "name": "走廊資料區鑰匙", "description": "開啟走廊資料區的通道。", "pickupSceneId": "S01", "pickupTarget": "drawer", "requiresPuzzle": "P01"},
     {"id": "I04", "name": "轉學交接單", "description": "記錄畢業前轉學與最後一天的交接次序，可隨時重讀。", "pickupSceneId": "S02", "pickupTarget": "cabinet", "requiresPuzzle": "P02"},
-    {"id": "I05", "name": "完整告別稿", "description": "說明個人照與紀念合照的關係，是最後互動的線索。", "pickupSceneId": "S03", "pickupTarget": "script", "requiresPuzzle": "P03"}
+    {"id": "I05", "name": "完整告別稿", "description": "說明個人照與紀念合照的關係，是最後互動的線索。", "pickupSceneId": "S03", "pickupTarget": "script", "requiresPuzzle": "P03"},
+    {"id": "I06", "name": "科展螢光透鏡", "description": "科展留下的濾光透鏡；在暗處照向黑板，能顯出特殊螢光字。", "pickupSceneId": "S02", "pickupTarget": "lens-cache", "requiresPuzzle": "P02"},
+    {"id": "I07", "name": "半透明描圖紙", "description": "紙上有顛倒的細字，需借窗邊的背光翻面閱讀。", "pickupSceneId": "S02", "pickupTarget": "tracing-paper", "requiresPuzzle": "P02"},
+    {"id": "I08", "name": "打孔逾期通知", "description": "圖書館舊通知的孔洞排列，似乎可以和借書卡疊合。", "pickupSceneId": "S04", "pickupTarget": "overdue-notice", "requiresPuzzle": "P02"}
   ],
   "puzzles": [
     {
@@ -101,10 +117,10 @@
       "prompt": "請為紀念名冊中的十七號補回姓名。",
       "requiresPuzzles": ["P01"], "requiredItemIds": ["I01"], "evidenceIds": ["E03", "E04"],
       "answer": "林予安", "spoilerText": "林予安",
-      "rewardItemIds": ["I04"], "unlockSceneIds": ["S03"],
+      "rewardItemIds": ["I04"], "unlockSceneIds": ["S03", "S04"],
       "verifyIds": ["V-A03", "V-A05", "V-A07"],
       "revealText": "林予安。轉學交接資料顯示，她在畢業前去了另一所學校。她沒有消失，只是沒有被寫進這份畢業名單。",
-      "failureText": "請確認兩份資料上的班級與座號，再比對姓名。",
+      "failureText": "請確認日期與身分，再比對借書卡與科展資料上的班級、座號和姓名。",
       "hints": [
         "同一個人可能在不同活動中留下紀錄。",
         "找出和借書卡相同班級、相同座號的那一列。",
@@ -113,7 +129,7 @@
     },
     {
       "id": "P03", "sceneId": "S03", "title": "被打亂的告別", "kind": "sequence",
-      "prompt": "依交接單，將三段錄音稿排回當天的順序。",
+      "prompt": "先輸入打孔通知與借書卡拼出的設備碼，再依交接單將三段錄音稿排回順序。",
       "requiresPuzzles": ["P02"], "requiredItemIds": ["I04"], "evidenceIds": ["E05"],
       "options": ["transfer_school", "return_book", "read_farewell"],
       "answer": ["return_book", "read_farewell", "transfer_school"],
@@ -131,7 +147,7 @@
     {
       "id": "P04", "sceneId": "S01", "title": "最後一次點名", "kind": "item-and-action",
       "prompt": "她想留下的位置，在哪裡？",
-      "requiresPuzzles": ["P03"], "requiredItemIds": ["I02", "I05"], "evidenceIds": ["E06", "E07"],
+      "requiresPuzzles": ["P03"], "requiredItemIds": ["I02", "I05", "I07", "I08"], "evidenceIds": ["E06", "E07", "E09", "E11"],
       "answer": ["restore_group_photo", "place_farewell_script", "answer_roll_call"],
       "spoilerText": "先放個人照，再放完整告別稿，最後代為回應點名",
       "rewardItemIds": [], "unlockSceneIds": [], "endingId": "END01",
@@ -142,8 +158,8 @@
       "wrongPlacementText": "這張照片需要一個能與全班留在一起的位置。",
       "hints": [
         "『到齊』不一定是把每個人都帶回房間。",
-        "再讀一次她留在告別稿裡的請求。",
-        "檢查背包中的個人照，以及教室中一直沒有補上的空白。"
+        "再讀一次她留在告別稿裡的請求，也確認十六號字條說的是誰的左右。",
+        "照片從台下觀看時，左右要和台上拍照者的方向反過來；再比對同一排與風紀股長的位置。"
       ]
     }
   ],
