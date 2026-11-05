@@ -1,4 +1,4 @@
-// Optional campus stories never grant required items, solve puzzles or ring bells.
+// Campus props include optional stories and gated main-story items; only explicit engine actions advance puzzles.
 const asset = file => `assets/generated/campus/${file}-v1.png`;
 export const NPCS = {
   'npc-caretaker': {
@@ -41,7 +41,7 @@ export const NPCS = {
 export const PROPS = {
   'return-calendar': { name: '舊教室日曆', image: 'assets/objects/campus-01-chalkboard-v1.png', text: '1998 年 5 月：18 日（一）、19 日（二）、20 日（三）、21 日（四）、22 日（五）。借閱章鎖規則：星期一至日編為 1–7，後接兩位節次。例如星期二第 4 節是 204。' },
   'absence-list': { name: '35 號休學名單', image: 'assets/objects/campus-06-science-bulletin-board-v1.png', text: '三年二班舊座號 35 · 林予晴。1998/05/12 辦理休學並出國，未參加 5/21 校內科展，也未於 5/20 在校還書。附註：本名單為學期初舊編號，不列入後來的 34 人班級名冊。' },
-  'photo-left-note': { name: '合照字條：十六號', image: 'assets/objects/campus-02-student-desk-v1.png', text: '「16 號站在我左邊，我們在同一排。」——17 號。請以觀看照片的左右為準。' },
+  'photo-left-note': { name: '合照字條：十六號', image: 'assets/objects/campus-02-student-desk-v1.png', text: '「16 號在我右手邊，我們站在同一排。」——17 號。這是當年站在台上拍照時的左右。' },
   'photo-monitor-note': { name: '合照字條：風紀股長', image: 'assets/objects/campus-08-archive-cabinet-v1.png', text: '「我沒站在風紀股長正旁邊。」——17 號。這裡的旁邊指上下左右緊鄰的位置。九宮格只擷取全班合照的一小區。' },
   'old-basketball': { name: '器材籃裡的籃球', image: asset('prop-basketball'), text: '球皮已磨平，籃上掛著「體育課後請歸還」的牌子。籃底只有粉筆灰，沒有鑰匙。這是一段校園日常，不是必需的通關道具。' },
   'old-thermos': { name: '忘記帶走的保溫瓶', image: asset('prop-thermos'), text: '瓶底貼著「08」的班級清潔輪值貼紙。瓶蓋轉得開，裡面是空的。數字只是物品管理標記，並非抽屜的答案。' },
@@ -54,14 +54,20 @@ export const PROPS = {
   'library-ledger': { name: '讀書會借閱紀錄', image: 'assets/objects/campus-08-archive-cabinet-v1.png', text: '三年二班讀書會，借閱人：林予安。最後一筆蓋著「已歸還」，旁邊卻留著一行小字：「下次討論，想聽大家說喜歡的結尾。」書還回來了，約定卻還沒有結束。' },
   'folded-letter': { name: '未寄出的便箋', image: 'assets/objects/campus-02-student-desk-v1.png', text: '夾在讀書會書冊裡的便箋：「給三年二班：轉學的事來得太快，我一直沒找到合適的時間說。書已經還了，借書卡卻忘了拿。如果下次有人問起十七號，請告訴他，我只是換了一間教室。等新學校的圖書館開放，我會把新的故事寫給你們。——林予安」紙上沒有地址，也沒有郵票。這是一封沒來得及交出去的告別。' },
   'library-notice': { name: '讀書會公告與回信', image: 'assets/objects/campus-06-science-bulletin-board-v1.png', text: '公告寫著「這週的主題：故事結束後，角色去了哪裡？」背面貼著同學沒有寄出的回信：「予安，這次換我們等妳的故事。妳的座位沒有被忘記。」同一張公告的正反兩面，藏著遲到多年的對話。你終於明白，有些告別不是沒有人回應，只是沒有送到對方手裡。' },
+  'classroom-window': { name: '教室窗戶', image: 'assets/objects/campus-01-chalkboard-v1.png', text: '窗外月光落在窗框上。半透明的描圖紙或許能在這裡讀出反向字跡。' },
+  'lens-cache': { name: '科展器材盒', image: 'assets/objects/campus-06-science-bulletin-board-v1.png', text: '器材盒裡有一枚螢光透鏡，標籤寫著「三年二班科展」。' },
+  'tracing-paper': { name: '半透明描圖紙', image: 'assets/objects/campus-06-science-bulletin-board-v1.png', text: '薄紙上有反向的文字，邊緣寫著「借窗光翻面」。' },
+  'overdue-notice': { name: '打孔逾期通知', image: 'assets/objects/campus-08-archive-cabinet-v1.png', text: '通知單上有四個透光孔。孔洞排列似乎與借書卡上的欄位對齊，但單看通知無法讀出完整數字。' },
+  'acrostic-poem': { name: '贈書短詩', image: 'assets/objects/campus-02-student-desk-v1.png', text: '講堂晚風收起最後一句\n台燈映著未寄出的心意\n下課鐘響以前，請記得回頭\n藏在紙頁裡的空位仍然留著\n\n每行第一個字連起來，指向一個藏著合照線索的地方。' },
+  'position-note': { name: '講台下的站位便箋', image: 'assets/objects/campus-03-lectern-script-stand-v1.png', text: '便箋背面畫著簡單九宮格，標出 16 號在台上視角的右側，並註明「同一排；風紀股長不在正旁邊」。照片從台下觀看時，左右會反過來。' },
   'archive-box': { name: '校慶節目單紙箱', image: 'assets/objects/campus-08-archive-cabinet-v1.png', text: '一疊校慶節目單：合唱、短劇、點歌時間。有人把錯字改了又改，留下好幾層筆跡。紙箱裡沒有新的通關道具，只有被認真準備過的日子。' }
 };
 const point = (id, x, y, stand) => ({ id, name: (NPCS[id] || PROPS[id]).name, kind: NPCS[id] ? 'npc' : 'flavor', x, y, stand, range: 85, sprite: NPCS[id]?.image || (['old-basketball','old-thermos','spare-cassette'].includes(id) ? PROPS[id].image : null) });
 export const CAMPUS_POINTS = {
-  S01: [point('return-calendar',565,140,[565,185]),point('photo-left-note',420,490,[420,525]),point('npc-caretaker',150,450,[200,450]),point('old-basketball',780,470,[730,470]),point('old-thermos',110,290,[160,290]),point('chalk-box',650,145,[650,190]),point('lost-umbrella',145,565,[190,550])],
-  S02: [point('absence-list',700,115,[700,170]),point('photo-monitor-note',705,500,[705,540]),point('npc-alumnus',320,350,[370,350]),point('lost-notice',190,125,[190,180]),point('old-bench',350,140,[350,185])],
+  S01: [point('return-calendar',565,140,[565,185]),point('photo-left-note',420,490,[420,525]),point('classroom-window',90,210,[135,210]),point('npc-caretaker',150,450,[200,450]),point('old-basketball',780,470,[730,470]),point('old-thermos',110,290,[160,290]),point('chalk-box',650,145,[650,190]),point('lost-umbrella',145,565,[190,550])],
+  S02: [point('absence-list',700,115,[700,170]),point('photo-monitor-note',705,500,[705,540]),point('lens-cache',825,460,[775,460]),point('tracing-paper',520,500,[520,540]),point('npc-alumnus',320,350,[370,350]),point('lost-notice',190,125,[190,180]),point('old-bench',350,140,[350,185])],
   S03: [point('npc-broadcast',750,400,[700,400]),point('spare-cassette',660,300,[660,350]),point('power-cord',270,250,[270,300]),point('archive-box',800,160,[800,220])],
-  S04: [point('library-ledger',830,160,[830,220]),point('folded-letter',280,450,[325,450]),point('library-notice',500,125,[500,180])]
+  S04: [point('library-ledger',830,160,[830,220]),point('folded-letter',280,450,[325,450]),point('library-notice',500,125,[500,180]),point('acrostic-poem',680,460,[650,500]),point('overdue-notice',200,150,[230,210])]
 };
 export function npcGreeting(id, state) {
   const npc = NPCS[id];

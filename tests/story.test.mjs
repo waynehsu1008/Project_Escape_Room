@@ -61,6 +61,7 @@ function validateFlow(story) {
   const pending = new Map(story.puzzles.map(p => [p.id, p]));
   while (pending.size) {
     let progressed = false;
+    story.items.filter(item => openScenes.has(item.pickupSceneId) && solved.has(item.requiresPuzzle)).forEach(item => inventory.add(item.id));
     for (const [id, puzzle] of pending) {
       if (!puzzle.requiresPuzzles.every(p => solved.has(p))) continue;
       if (!openScenes.has(puzzle.sceneId)) continue;
@@ -74,6 +75,7 @@ function validateFlow(story) {
       solved.add(id);
       puzzle.rewardItemIds.forEach(i => inventory.add(i));
       puzzle.unlockSceneIds.forEach(s => openScenes.add(s));
+      story.items.filter(item => openScenes.has(item.pickupSceneId) && solved.has(item.requiresPuzzle)).forEach(item => inventory.add(item.id));
       pending.delete(id);
       progressed = true;
     }

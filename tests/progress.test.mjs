@@ -33,7 +33,7 @@ test('V-S02：計時含閱讀，隱藏、未開始與通關後停止',()=>{
 });
 test('V-E01：近距探索去重、失敗不發現、不含門與 NPC，存讀與舊檔遷移',()=>{
   let s=createGame();s.started=true;s.bells=[1];s.player={x:160,y:290,facing:'up'};
-  assert.equal(exploration(s).total,27);
+  assert.equal(exploration(s).total,33);
   assert.equal(exploration(s).found,0);assert.ok(exploration(s).items.some(p=>!p.found&&p.id==='old-thermos'));
   s=execute(s,{type:'DISCOVER',target:'old-thermos'},story).state;
   assert.equal(exploration(s).found,1);assert.equal(exploration(execute(s,{type:'DISCOVER',target:'old-thermos'},story).state).found,1);

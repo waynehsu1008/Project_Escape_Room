@@ -34,11 +34,11 @@ const art = {
   register: 'assets/objects/campus-07-memorial-register-v1.png', cabinet: 'assets/objects/campus-08-archive-cabinet-v1.png',
   player: 'assets/objects/campus-09-cassette-player-v1.png', door: 'assets/objects/campus-10-classroom-door-v1.png'
 };
-const itemArt = { I01: art.register, I02: 'assets/generated/student-portrait-v1.png', I03: 'assets/generated/brass-key-v1.png', I04: art.register, I05: art.lectern };
-const itemLabels = { I01: '借書卡', I02: '個人照', I03: '鑰匙', I04: '交接單', I05: '告別稿' };
+const itemArt = { I01: art.register, I02: 'assets/generated/student-portrait-v1.png', I03: 'assets/generated/brass-key-v1.png', I04: art.register, I05: art.lectern, I06: art.science, I07: 'assets/objects/campus-02-student-desk-v1.png', I08: art.cabinet };
+const itemLabels = { I01: '借書卡', I02: '個人照', I03: '鑰匙', I04: '交接單', I05: '告別稿', I06: '透鏡', I07: '描圖紙', I08: '通知單' };
 
 let story, state = createGame(), saved = null, hasBadSave = false, storageAvailable = true;
-let selectedItem = null, path = [], intent = null, keys = new Set(), nearestId = null, sceneId = null;
+let selectedItem = null, path = [], intent = null, keys = new Set(), nearestId = null, sceneId = null, positionNoteVisibility = false;
 let toastTimer, feedbackTimer, feedbackAnimation, blockedDoorAt = 0, audioContext, modalReturnFocus, lastSaveTime = 0;
 const modal = $('#modal'), game = $('#game');
 
@@ -129,20 +129,23 @@ function completed(point) {
 }
 function renderMap() {
   const world = WORLD[state.scene];
-  if (sceneId !== state.scene) {
+  const noteVisible = state.scene === 'S01' && state.flags.poemRead;
+  if (sceneId !== state.scene || positionNoteVisibility !== noteVisible) {
     sceneId = state.scene; nearestId = null;
+    positionNoteVisibility = noteVisible;
     $('#map-image').src = world.image; $('#map-image').alt = `${world.name}俯視探索地圖`;
     $('#scene-name').textContent = world.name; $('#scene-subtitle').textContent = world.subtitle;
-    $('#map-objects').innerHTML = world.points.map(p => `<button class="map-point ${p.sprite ? 'has-sprite' : ''} ${p.kind === 'door' ? 'door' : ''}" type="button" data-target="${p.id}" aria-label="${esc(p.name)}" style="left:${p.x / 10}%;top:${p.y / 6.67}%">${p.sprite ? `<img class="campus-sprite ${p.kind === 'npc' ? 'npc-sprite' : 'prop-sprite'}" src="${p.sprite}" alt="" draggable="false">` : ''}<span class="point-symbol">${icon(p.kind === 'npc' ? 'note' : p.kind === 'flavor' ? 'eye' : p.kind === 'door' ? 'door' : p.kind === 'read' ? 'eye' : p.kind === 'pickup' ? 'hand' : p.kind === 'use' ? 'hand' : 'lock')}</span><span class="point-label">${esc(p.name)}</span></button>`).join('');
+    $('#map-objects').innerHTML = world.points.filter(p => p.id !== 'position-note' || noteVisible).map(p => `<button class="map-point ${p.sprite ? 'has-sprite' : ''} ${p.kind === 'door' ? 'door' : ''}" type="button" data-target="${p.id}" aria-label="${esc(p.name)}" style="left:${p.x / 10}%;top:${p.y / 6.67}%">${p.sprite ? `<img class="campus-sprite ${p.kind === 'npc' ? 'npc-sprite' : 'prop-sprite'}" src="${p.sprite}" alt="" draggable="false">` : ''}<span class="point-symbol">${icon(p.kind === 'npc' ? 'note' : p.kind === 'flavor' ? 'eye' : p.kind === 'door' ? 'door' : p.kind === 'read' ? 'eye' : p.kind === 'pickup' ? 'hand' : p.kind === 'use' ? 'hand' : 'lock')}</span><span class="point-label">${esc(p.name)}</span></button>`).join('');
     modal.close();
     $('#map-objects').querySelectorAll('[data-target]').forEach(button => button.addEventListener('click', event => { event.stopPropagation(); walkToPoint(button.dataset.target); }));
   }
   for (const p of world.points) {
     const node = $(`[data-target="${p.id}"]`);
+    if (!node) continue;
     node.classList.toggle('explored',state.discovered.includes(`${state.scene}:${p.id}`));
     node.classList.toggle('complete', completed(p)); node.classList.toggle('locked', p.kind === 'door' && !doorOpen(p));
   }
-  game.dataset.scene = state.scene; game.dataset.bells = String(state.bells.length); game.dataset.ended = String(state.ended);
+  game.dataset.scene = state.scene; game.dataset.bells = String(state.bells.length); game.dataset.ended = String(state.ended); game.dataset.lightsOff = String(state.flags.classroomDark);
   game.dataset.solved = state.solved.join(',');
   renderPosition(false);
 }
@@ -172,11 +175,11 @@ function render() {
     const unlocked = id === 'S01' || (id === 'S02' ? state.flags.doorOpen : id === 'S03' ? state.flags.broadcastOpen : state.solved.includes('P02'));
     return `<li class="scene-row ${id === state.scene ? 'current' : ''} ${unlocked ? '' : 'locked'}" ${id === state.scene ? 'aria-current="location"' : ''}><img src="${world.image}" alt="" loading="lazy"><div><h3>${world.name}</h3><p>${id === state.scene ? '你在這裡' : unlocked ? '已開放 · 可走回探索' : '通路尚未開放'}</p></div></li>`;
   }).join('');
-  $('#inventory-slots').innerHTML = ['I01', 'I02', 'I03', 'I04', 'I05'].map(id => state.inventory.includes(id)
+  $('#inventory-slots').innerHTML = story.items.map(item => item.id).map(id => state.inventory.includes(id)
     ? `<button class="inventory-slot occupied ${state.used.includes(id) ? 'used' : ''}" data-item="${id}" type="button" aria-label="查看${esc(itemLabels[id])}"><img src="${itemArt[id]}" alt="${esc(itemLabels[id])}"></button>`
     : `<div class="inventory-slot empty" aria-label="空的背包格"></div>`).join('');
   $('#inventory-slots').querySelectorAll('[data-item]').forEach(node => node.addEventListener('click', () => showItem(node.dataset.item)));
-  $('#bag-caption').textContent = state.inventory.length ? `已收集 ${state.inventory.length}／5 件物品 · 文件可以重讀` : '重要的物品，都會好好留下。';
+  $('#bag-caption').textContent = state.inventory.length ? `已收集 ${state.inventory.length} 件物品 · 文件可以重讀` : '重要的物品，都會好好留下。';
   renderProgress();
   $('#hint-button').disabled = state.ended;
   $('#sound-button').innerHTML = icon(state.muted ? 'muted' : 'sound');
@@ -216,7 +219,7 @@ function showSettings() {
 
 function clueText(id) {
   if (NPCS[id] || PROPS[id]) return campusText(id, state);
-  if (id === 'blackboard') return state.flags.returned ? '把她的位置留下。\n最後一次點名，請也算上她。' : '請在第八次鐘聲，讓全班到齊。\n廣播：「三年二班，開始點名……十六號……」';
+  if (id === 'blackboard') return state.flags.returned ? '把她的位置留下。\n最後一次點名，請也算上她。' : `請在第八次鐘聲，讓全班到齊。\n廣播：「三年二班，開始點名……十六號……」${state.flags.calendarClueRead ? `\n\n${story.evidence.find(e => e.id === 'E08').text}` : ''}`;
   if (id === 'roster') return `${story.evidence.find(e => e.id === 'E01').text}\n${story.evidence.find(e => e.id === 'E02').text}`;
   if (id === 'science') return story.evidence.find(e => e.id === 'E04').text;
   if (id === 'recordings') return story.audio.filter(a => a.eventId).map(a => `${a.label}｜${a.transcript}`).join('\n\n');
@@ -295,7 +298,8 @@ function showSequence() {
   const initialOrder = ['transfer_school', 'return_book', 'read_farewell'];
   let order = [...initialOrder];
   const options = Object.fromEntries(story.audio.filter(a => a.eventId).map(a => [a.eventId, a]));
-  openModal('被打亂的告別', `<img class="modal-art" src="${art.player}" alt="錄音播放機"><p>三段錄音稿的標籤清楚，順序卻亂了。依照交接單，把最後一天的事件排回來。</p>${state.inventory.includes('I04') ? '<button id="read-handoff" class="secondary-button">閱讀轉學交接單</button><div id="handoff-copy" class="hint-document"></div>' : '<div class="hint-document">你還沒有交接單。可以先返回走廊，從資料櫃拾取。</div>'}<div class="sequence-list" id="sequence-list"></div><button class="primary-button" id="check-sequence" type="button">依此順序播放</button><p class="form-feedback" id="form-feedback" role="status"></p>${hintArea('P03')}`, '第三道謎題 · 使用上下按鈕排序');
+  const powerPanel = state.flags.playerPowered ? '<p class="hint-document">播放設備已啟動。</p>' : `<div class="hint-document">${state.flags.noticeCombined ? '通知單與借書卡已疊合，請輸入設備啟動碼。' : '設備未通電。請先在背包中把打孔逾期通知與 17 號借書卡疊合。'}</div><form class="puzzle-form" id="player-code-form"><input id="player-code-input" aria-label="播放設備啟動碼" inputmode="numeric" maxlength="4" autocomplete="off"><button class="primary-button" type="submit">啟動設備</button></form><p class="form-feedback" id="player-code-feedback" role="status"></p>`;
+  openModal('被打亂的告別', `<img class="modal-art" src="${art.player}" alt="錄音播放機"><p>設備亮起後，依轉學交接單將三段錄音稿排回順序。</p>${powerPanel}${state.inventory.includes('I04') ? '<button id="read-handoff" class="secondary-button">閱讀轉學交接單</button><div id="handoff-copy" class="hint-document"></div>' : '<div class="hint-document">你還沒有交接單。可以先返回走廊，從資料櫃拾取。</div>'}<div class="sequence-list" id="sequence-list"></div><button class="primary-button" id="check-sequence" type="button" ${state.flags.playerPowered ? '' : 'disabled'}>依此順序播放</button><p class="form-feedback" id="form-feedback" role="status"></p>${hintArea('P03')}`, '第三道謎題 · 使用上下按鈕排序');
   function renderSequence() {
     $('#sequence-list').innerHTML = order.map((id, index) => `<div class="sequence-row" data-sequence-id="${id}"><span class="sequence-number">${index + 1}</span><div class="sequence-copy"><strong>${esc(options[id].label)}</strong><p>${esc(options[id].transcript)}</p></div><div class="sequence-buttons"><button type="button" data-index="${index}" data-swap="-1" aria-label="將${esc(options[id].label)}往前移" ${index === 0 ? 'disabled' : ''}>↑</button><button type="button" data-index="${index}" data-swap="1" aria-label="將${esc(options[id].label)}往後移" ${index === 2 ? 'disabled' : ''}>↓</button></div></div>`).join('');
     modal.querySelectorAll('[data-swap]').forEach(button => button.addEventListener('click', () => {
@@ -309,6 +313,12 @@ function showSequence() {
     if (act({ type: 'READ_HANDOFF' }, false).ok) showHandoff();
   });
   renderSequence(); bindHints('P03');
+  $('#player-code-form')?.addEventListener('submit', event => {
+    event.preventDefault();
+    const result = act({ type: 'UNLOCK_PLAYER', answer: $('#player-code-input').value }, false);
+    if (!result.ok) { $('#player-code-feedback').textContent = result.message; return; }
+    showSequence();
+  });
   $('#check-sequence').addEventListener('click', () => {
     const result = act({ type: 'SOLVE', id: 'P03', answer: order }, false);
     if (!result.ok) {
@@ -339,9 +349,15 @@ function showItem(id) {
   if (!state.inventory.includes(id)) return;
   if (id === 'I04' && !state.flags.handoffRead && !state.ended) act({ type: 'READ_HANDOFF' }, false);
   const item = story.items.find(i => i.id === id), used = state.used.includes(id);
-  const documentText = id === 'I01' ? '借書卡 · 1998 年三年二班\n座號：17\n姓名：林□安\n姓名的中間一字已磨損。\n還書章：1998/05/20，第 8 節。' : id === 'I04' ? story.evidence.find(e => e.id === 'E05').text : id === 'I05' ? story.evidence.find(e => e.id === 'E06').text : item.description;
-  openModal(item.name, `<div class="bag-detail"><img src="${itemArt[id]}" alt="${esc(item.name)}"><div><h3>${esc(item.name)}</h3><p>${esc(item.description)}</p><p class="item-state">${used ? (id === 'I03' ? '已使用，內門保持開放。' : '已放置，仍可查看這份紀錄。') : '好好保存在你的背包裡。'}</p></div></div><div class="clue-paper" style="margin-top:20px">${esc(documentText)}</div><div class="modal-actions">${['I02', 'I03', 'I05'].includes(id) && !used ? '<button class="primary-button" id="select-item" type="button">拿起這件道具</button>' : ''}<button class="secondary-button" id="back-to-bag" type="button">返回背包</button></div>`, '背包中的物品');
+  const documentText = id === 'I01' ? '借書卡 · 1998 年三年二班\n座號：17\n姓名：林□安\n姓名的中間一字已磨損。\n還書章：1998/05/20，第 8 節。' : id === 'I04' ? story.evidence.find(e => e.id === 'E05').text : id === 'I05' ? story.evidence.find(e => e.id === 'E06').text : id === 'I08' && state.flags.noticeCombined ? '四個孔洞露出借書卡欄位中的「17」與「08」。播放設備啟動碼：1708。' : item.description;
+  const combineButton = id === 'I08' && !state.flags.noticeCombined && state.inventory.includes('I01') ? '<button class="primary-button" id="combine-notice" type="button">與 17 號借書卡疊合</button>' : '';
+  const selectButton = ['I02', 'I03', 'I05', 'I06', 'I07'].includes(id) && !used ? '<button class="primary-button" id="select-item" type="button">拿起這件道具</button>' : '';
+  openModal(item.name, `<div class="bag-detail"><img src="${itemArt[id]}" alt="${esc(item.name)}"><div><h3>${esc(item.name)}</h3><p>${esc(item.description)}</p><p class="item-state">${used ? (id === 'I03' ? '已使用，內門保持開放。' : '已放置，仍可查看這份紀錄。') : '好好保存在你的背包裡。'}</p></div></div><div class="clue-paper" style="margin-top:20px">${esc(documentText)}</div><div class="modal-actions">${selectButton}${combineButton}<button class="secondary-button" id="back-to-bag" type="button">返回背包</button></div>`, '背包中的物品');
   $('#back-to-bag').addEventListener('click', showBag);
+  $('#combine-notice')?.addEventListener('click', () => {
+    const result = act({ type: 'COMBINE_NOTICE' }, false);
+    if (result.ok) showItem(id); else toast(result.message);
+  });
   $('#select-item')?.addEventListener('click', () => { selectedItem = id; render(); modal.close(); toast(`已拿起${itemLabels[id]}。點擊場景中的使用目標。`); });
 }
 function showUseTarget(id) {
@@ -349,8 +365,15 @@ function showUseTarget(id) {
   const point = getPoint(state.scene, id), appropriate = { photo: 'I02', lectern: 'I05' }[id];
   const available = state.inventory.filter(item => ['I02', 'I03', 'I05'].includes(item) && !state.used.includes(item));
   const finalCall = id === 'lectern' && state.flags.scriptPlaced && !state.ended;
-  openModal(point.name, `<img class="modal-art" src="${art[id]}" alt="${esc(point.name)}"><div class="clue-paper">${esc(clueText(id))}</div>${state.flags.photoPlaced && id === 'photo' ? `<img style="width:75px;height:100px;object-fit:cover;margin-top:15px" src="${itemArt.I02}" alt="已放回的個人照">` : ''}${finalCall ? '<p style="margin-top:20px">第七聲鐘響。這一次，你可以代她回答。</p><div class="modal-actions"><button class="primary-button" id="answer-roll-call">代為回應：「到。」</button></div>' : `<p style="margin-top:20px">${available.length ? '從背包選一件道具，對這裡使用。' : '也許需要一件能放在這裡的物品。可以繼續探索，之後再回來。'}</p><div class="modal-actions">${available.sort((a, b) => Number(b === appropriate) - Number(a === appropriate)).map(item => `<button class="secondary-button" data-use-item="${item}" type="button">使用${esc(itemLabels[item])}</button>`).join('')}</div>`}`, '讓留下的物品，找到自己的位置');
+  const stashAction = id === 'lectern' && state.flags.poemRead && !state.flags.positionClueRead ? '<div class="modal-actions"><button class="secondary-button" id="inspect-stash" type="button">查看講台下方</button></div>' : '';
+  const foundNote = id === 'lectern' && state.flags.positionClueRead ? `<div class="hint-document">${esc(PROPS['position-note'].text)}</div>` : '';
+  openModal(point.name, `<img class="modal-art" src="${art[id]}" alt="${esc(point.name)}"><div class="clue-paper">${esc(clueText(id))}</div>${state.flags.photoPlaced && id === 'photo' ? `<img style="width:75px;height:100px;object-fit:cover;margin-top:15px" src="${itemArt.I02}" alt="已放回的個人照">` : ''}${finalCall ? '<p style="margin-top:20px">第七聲鐘響。這一次，你可以代她回答。</p><div class="modal-actions"><button class="primary-button" id="answer-roll-call">代為回應：「到。」</button></div>' : `<p style="margin-top:20px">${available.length ? '從背包選一件道具，對這裡使用。' : '也許需要一件能放在這裡的物品。可以繼續探索，之後再回來。'}</p><div class="modal-actions">${available.sort((a, b) => Number(b === appropriate) - Number(a === appropriate)).map(item => `<button class="secondary-button" data-use-item="${item}" type="button">使用${esc(itemLabels[item])}</button>`).join('')}</div>`}${stashAction}${foundNote}`, '讓留下的物品，找到自己的位置');
   bindUseButtons(id);
+  $('#inspect-stash')?.addEventListener('click', () => {
+    const result = act({ type: 'INSPECT_LECTERN' }, false);
+    if (result.ok) openModal('講台下的站位便箋', `<div class="clue-paper">${esc(PROPS['position-note'].text)}</div><p>這張便箋已記入探索筆記。</p>`, '贈書短詩的藏頭指引');
+    else toast(result.message);
+  });
   $('#answer-roll-call')?.addEventListener('click', () => {
     const result = act({ type: 'ANSWER' }, false);
     if (result.ok) {
@@ -360,10 +383,13 @@ function showUseTarget(id) {
   });
 }
 function showPhotoGrid() {
+  if (!state.flags.positionClueRead || !state.flags.mirrorClueRead) {
+    return openModal('站位線索還沒完整', '<p>先讀圖書館短詩，回舊教室查看講台下的便箋；再把描圖紙帶到窗邊，確認拍照視角的左右反轉。</p>', '九宮格仍可稍後再試');
+  }
   selectedItem = null;
   render();
   const slots = ['同學', '同學', '風紀股長', '16 號', '候選空位', '候選空位', '同學', '候選空位', '同學'];
-  openModal('推理合照站位', '<p>比對教室與走廊的兩張字條，選出 17 號的位置。</p><div class="photo-grid">' +
+  openModal('推理合照站位', '<p>先用台上拍照者的視角判讀紙條，再轉成台下觀看照片的左右。16 號在台上視角的右側，且與 17 號同一排。</p><div class="photo-grid">' +
     slots.map((label, slot) => `<button type="button" data-slot="${slot}" ${label === '候選空位' ? '' : 'disabled'}><span class="photo-silhouette" aria-hidden="true"></span><span>${label}</span><small>第 ${Math.floor(slot / 3) + 1} 排第 ${slot % 3 + 1} 格</small></button>`).join('') +
     '</div><p id="form-feedback" class="form-feedback" role="status"></p>', '全班合照局部 · 九宮格');
   modal.querySelectorAll('[data-slot]:enabled').forEach(button => button.addEventListener('click', () => {
@@ -378,7 +404,9 @@ function useItem(id, target) {
   const result = act({ type: 'USE', id, target }, false);
   if (!result.ok) { toast(result.message); return; }
   selectedItem = null; render(); toast(result.message, 6500);
-  if (target === 'lectern') showUseTarget(target); else if (modal.open) modal.close();
+  if (id === 'I06' && target === 'blackboard') showRead('blackboard');
+  else if (id === 'I07' && target === 'classroom-window') showCampus('classroom-window');
+  else if (target === 'lectern') showUseTarget(target); else if (modal.open) modal.close();
 }
 function bindUseButtons(target) { modal.querySelectorAll('[data-use-item]').forEach(button => button.addEventListener('click', () => useItem(button.dataset.useItem, target))); }
 function showDoor(id) {
@@ -416,6 +444,7 @@ function interact(id) {
   if (NPCS[id] || PROPS[id]) return showCampus(id);
   if (['blackboard', 'roster', 'science', 'recordings'].includes(id)) return showRead(id);
   if (point.kind === 'door') return showDoor(id);
+  if (id === 'light-switch') return showLightSwitch();
   if (id === 'drawer') return showPuzzle('P01');
   if (id === 'register') return showPuzzle('P02');
   if (id === 'player') return showPuzzle('P03');
@@ -433,6 +462,12 @@ function showCampus(id) {
   const result = act({ type: 'READ', target: id }, false);
   if (!result.ok) return;
   const npc = NPCS[id], prop = PROPS[id];
+  if (['lens-cache', 'tracing-paper', 'overdue-notice'].includes(id)) {
+    if (!state.solved.includes('P02')) return openModal(prop.name, `<p>${esc(prop.text)}</p><p class="opening-note">先補回十七號姓名，相關校史資料才會開放整理。</p>`, '暫時無法拾取');
+    const itemId = { 'lens-cache': 'I06', 'tracing-paper': 'I07', 'overdue-notice': 'I08' }[id];
+    const titles = { I06: ['科展器材盒', '一枚科展螢光透鏡'], I07: ['走廊資料區', '一張半透明描圖紙'], I08: ['逾期通知單', '一張有四個透光孔的舊通知'] };
+    return showLoot(id, [itemId], titles[itemId][0], titles[itemId][1]);
+  }
   if (npc) {
     openModal(npc.name, `<div class="npc-conversation"><img class="npc-portrait" src="${npc.image}" alt="${esc(npc.name)}"><div><p class="npc-role">${esc(npc.role)}</p><p id="npc-dialogue" role="status">${esc(npcGreeting(id,state))}</p></div></div><div class="dialogue-options">${npc.topics.map(([question],i) => `<button type="button" class="secondary-button" data-topic="${i}">${esc(question)}</button>`).join('')}</div><div class="modal-actions"><button type="button" class="text-button" id="leave-conversation">先去別處看看 →</button></div>`, '校園相遇 · 可自由交談');
     modal.querySelectorAll('[data-topic]').forEach(button => button.addEventListener('click', () => {
@@ -443,8 +478,17 @@ function showCampus(id) {
     }));
     $('#leave-conversation').addEventListener('click', closeModal);
   } else {
-    openModal(prop.name, `<img class="modal-art" src="${prop.image}" alt="${esc(prop.name)}"><div class="clue-paper">${esc(prop.text)}</div><p class="opening-note" style="margin-top:18px">你把這段校園日常記在探索筆記裡。物品留在原處，不占用背包。</p>`, '校園物件 · 查看與觀察');
+    const text = id === 'classroom-window' && state.flags.mirrorClueRead ? story.evidence.find(e => e.id === 'E09').text : id === 'position-note' ? story.evidence.find(e => e.id === 'E11').text : prop.text;
+    openModal(prop.name, `<img class="modal-art" src="${prop.image}" alt="${esc(prop.name)}"><div class="clue-paper">${esc(text)}</div><p class="opening-note" style="margin-top:18px">你把這段校園日常記在探索筆記裡。物品留在原處，不占用背包。</p>`, '校園物件 · 查看與觀察');
   }
+}
+function showLightSwitch() {
+  const actionText = state.flags.classroomDark ? '打開教室燈光' : '關掉教室燈光';
+  openModal('教室電燈開關', `<p>${state.flags.classroomDark ? '教室暗了下來。黑板上似乎有螢光字跡。' : '舊教室仍亮著。黑板某處像是被擦過，留下淡淡的痕跡。'}</p><div class="modal-actions"><button class="primary-button" id="toggle-lights" type="button">${actionText}</button></div>`, '環境互動 · 可反覆切換');
+  $('#toggle-lights').addEventListener('click', () => {
+    const result = act({ type: 'TOGGLE_LIGHTS' }, false);
+    if (result.ok) showLightSwitch(); else toast(result.message);
+  });
 }
 function renderProgress() {
   const n=Math.floor(state.elapsed), found=state.discovered.length;

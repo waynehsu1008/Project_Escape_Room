@@ -5,19 +5,21 @@ import { NPCS, PROPS, CAMPUS_POINTS, npcGreeting } from '../game/campus.mjs';
 import { createGame, execute, restore, serialize } from '../game/engine.mjs';
 import { WORLD, walkable, findPath } from '../game/world.mjs';
 const story = JSON.parse(await readFile(new URL('../content/story.json',import.meta.url),'utf8'));
-test('三位 NPC 與十六件校園物件均可到達，沒有改動主線必要道具', () => {
-  assert.equal(Object.keys(NPCS).length,3); assert.equal(Object.keys(PROPS).length,16);
+test('三位 NPC 與二十二件校園物件可到達；閱讀不會自動拾取道具或推進鐘聲', () => {
+  assert.equal(Object.keys(NPCS).length,3); assert.equal(Object.keys(PROPS).length,22);
   for (const [scene,points] of Object.entries(CAMPUS_POINTS)) for (const p of points) {
     assert.ok(walkable(scene,...p.stand),p.id);
     assert.ok(findPath(scene,WORLD[scene].spawn,p.stand).length,p.id);
     const initial = createGame(); initial.started=true;initial.bells=[1];initial.scene=scene;
+    if (p.id === 'acrostic-poem') { initial.solved=['P01','P02']; initial.flags.doorOpen=true; initial.inventory=['I01','I02','I03','I04']; }
     initial.player={x:p.stand[0],y:p.stand[1],facing:'down'};
     const result=execute(initial,{type:'READ',target:p.id},story);
     assert.equal(result.ok,true,p.id);
     assert.deepEqual(result.state.inventory,initial.inventory);
     assert.deepEqual(result.state.solved,initial.solved);
     assert.deepEqual(result.state.bells,initial.bells);
-    assert.deepEqual(result.state.flags,initial.flags);
+    if (p.id === 'acrostic-poem') assert.equal(result.state.flags.poemRead,true);
+    else assert.deepEqual(result.state.flags,initial.flags);
   }
 });
 test('可選對話與物件筆記可存讀，舊存檔仍相容，遠距不能讀取',()=>{
