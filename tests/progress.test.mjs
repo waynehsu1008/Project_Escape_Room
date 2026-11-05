@@ -7,7 +7,7 @@ import { scoreRun, exploration, tickClock } from '../game/progress.mjs';
 const story=JSON.parse(await readFile(new URL('../content/story.json',import.meta.url),'utf8'));
 test('V-N01：所有場景門成對且上下相反，落點可走、面向前進、不立即彈回',()=>{
   for(const [scene,w] of Object.entries(WORLD))for(const door of w.points.filter(p=>p.kind==='door'&&p.to!=='END01')){
-    const s=createGame();s.started=true;s.scene=scene;s.solved=['P01','P02','P03'];s.flags.doorOpen=true;s.player={x:door.x,y:door.y,facing:'up'};
+    const s=createGame();s.started=true;s.scene=scene;s.solved=['P01','P02','P03'];s.flags.doorOpen=true;s.flags.broadcastOpen=true;s.player={x:door.x,y:door.y,facing:'up'};
     const r=execute(s,{type:'TRAVEL',target:door.id},story);assert.equal(r.ok,true);
     const reverse=WORLD[door.to].points.find(p=>p.to===scene);assert.ok(reverse);
     assert.notEqual(door.side,reverse.side);assert.equal(r.state.player.facing,door.side==='bottom'?'down':'up');
@@ -33,7 +33,7 @@ test('V-S02：計時含閱讀，隱藏、未開始與通關後停止',()=>{
 });
 test('V-E01：近距探索去重、失敗不發現、不含門與 NPC，存讀與舊檔遷移',()=>{
   let s=createGame();s.started=true;s.bells=[1];s.player={x:160,y:290,facing:'up'};
-  assert.equal(exploration(s).total,23);
+  assert.equal(exploration(s).total,27);
   assert.equal(exploration(s).found,0);assert.ok(exploration(s).items.some(p=>!p.found&&p.id==='old-thermos'));
   s=execute(s,{type:'DISCOVER',target:'old-thermos'},story).state;
   assert.equal(exploration(s).found,1);assert.equal(exploration(execute(s,{type:'DISCOVER',target:'old-thermos'},story).state).found,1);
